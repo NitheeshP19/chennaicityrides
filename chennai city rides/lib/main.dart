@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'car_selection_screen.dart';
+import 'home_screen.dart';
 import 'login_screen.dart';
 
 Future<void> main() async {
@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
               Supabase.instance.client.auth.currentSession;
           return session == null
               ? const LoginScreen()
-              : const CarSelectionScreen();
+              : const HomeScreen();
         },
       ),
     );

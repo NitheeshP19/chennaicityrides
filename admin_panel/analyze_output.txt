@@ -1,0 +1,23 @@
+﻿Analyzing admin_panel...                                        
+
+   info - Don't invoke 'print' in production code - lib\main.dart:20:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:21:5 - avoid_print
+
+flutter : 2 issues 
+found. (ran in 3.7s)
+At line:1 char:1
++ flutter analyze 2>&1 
+| Out-File -FilePath 
+analyze_output.txt 
+-Encodin ...
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo      
+        : NotSpecified: 
+(2 i    ssues found. 
+(ran in 3    
+.7s):String) [], Remot  
+  eException
+    + 
+FullyQualifiedErrorI    
+d : NativeCommandError
+ 

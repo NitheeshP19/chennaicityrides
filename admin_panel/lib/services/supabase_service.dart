@@ -22,7 +22,7 @@ class SupabaseService {
       'driver_name': driverName,
       'driver_phone': driverPhone,
       'quoted_price': quotedPrice,
-      'status': 'Allotted',
+      'status': 'Pending_Payment',
     }).eq('id', tripId);
   }
 

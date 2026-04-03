@@ -93,7 +93,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     final trip = trips[index];
                     final isSelected = trip['id'] == _selectedTrip?['id'];
                     final status = _displayValue(trip['status'], 'New');
-                    final isAllotted = status == 'Allotted';
+                    final isAllotted = status == 'Allotted' || status == 'Pending_Payment';
                     final pickup = _displayValue(
                       trip['pickup_location'],
                       'Pickup pending',

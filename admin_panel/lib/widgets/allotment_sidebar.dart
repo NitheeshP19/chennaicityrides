@@ -135,7 +135,7 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
   @override
   Widget build(BuildContext context) {
     final status = _displayValue(widget.tripData['status'], 'New');
-    final isAllotted = status == 'Allotted';
+    final isAllotted = status == 'Allotted' || status == 'Pending_Payment';
 
     return Container(
       width: 400,
@@ -185,6 +185,21 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
                 _buildInfoRow(
                   'Start Date',
                   _displayValue(widget.tripData['start_date'], 'N/A'),
+                ),
+                const SizedBox(height: 12),
+                _buildInfoRow(
+                  'Customer',
+                  _displayValue(widget.tripData['customer_name'], 'Not provided'),
+                ),
+                const SizedBox(height: 12),
+                _buildInfoRow(
+                  'Phone',
+                  _displayValue(widget.tripData['customer_phone'], 'Not provided'),
+                ),
+                const SizedBox(height: 12),
+                _buildInfoRow(
+                  'Passengers',
+                  _displayValue(widget.tripData['passenger_count'], 'N/A'),
                 ),
                 const Divider(height: 48),
                 Text(

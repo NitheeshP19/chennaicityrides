@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'payment_screen.dart';
-
 class AppColors {
   static const Color primary = Color(0xFF004C22);
   static const Color primaryContainer = Color(0xFF166534);
@@ -23,16 +21,12 @@ class AppColors {
 class VehicleOption {
   final String name;
   final String description;
-  final String priceLabel;
-  final int estimatedPrice;
   final IconData icon;
   final int capacity;
 
   const VehicleOption({
     required this.name,
     required this.description,
-    required this.priceLabel,
-    required this.estimatedPrice,
     required this.icon,
     required this.capacity,
   });
@@ -63,32 +57,24 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
     VehicleOption(
       name: 'Car',
       description: 'Premium comfort for 4',
-      priceLabel: 'INR 499/hr',
-      estimatedPrice: 4999,
       icon: Icons.directions_car_rounded,
       capacity: 4,
     ),
     VehicleOption(
       name: 'SUV',
       description: 'Spacious travel for 6',
-      priceLabel: 'INR 799/hr',
-      estimatedPrice: 6999,
       icon: Icons.local_taxi_rounded,
       capacity: 6,
     ),
     VehicleOption(
       name: '12-Seater',
       description: 'Executive group van',
-      priceLabel: 'INR 1299/hr',
-      estimatedPrice: 9999,
       icon: Icons.airport_shuttle_rounded,
       capacity: 12,
     ),
     VehicleOption(
       name: '24-Seater',
       description: 'Corporate shuttle',
-      priceLabel: 'INR 2499/hr',
-      estimatedPrice: 15999,
       icon: Icons.directions_bus_rounded,
       capacity: 24,
     ),
@@ -215,9 +201,7 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
     });
   }
 
-  Future<void> _bookTrip() async {
-    if (_isBooking) return;
-
+  void _showContactSheet() {
     final pickup = _pickupController.text.trim();
     final dropoff = _dropoffController.text.trim();
 
@@ -231,40 +215,91 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
       return;
     }
 
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return _ContactBottomSheet(
+          nameController: nameController,
+          phoneController: phoneController,
+          isBooking: _isBooking,
+          onSubmit: () async {
+            final name = nameController.text.trim();
+            final phone = phoneController.text.trim();
+
+            if (name.isEmpty || phone.isEmpty) {
+              ScaffoldMessenger.of(sheetContext).showSnackBar(
+                const SnackBar(
+                  content: Text('Please enter both name and phone number.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+
+            if (phone.length < 10) {
+              ScaffoldMessenger.of(sheetContext).showSnackBar(
+                const SnackBar(
+                  content: Text('Please enter a valid phone number.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+
+            Navigator.of(sheetContext).pop();
+            await _submitTrip(name, phone);
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _submitTrip(String customerName, String customerPhone) async {
+    if (_isBooking) return;
+
     setState(() => _isBooking = true);
 
+    final pickup = _pickupController.text.trim();
+    final dropoff = _dropoffController.text.trim();
     final selectedVehicle = vehicles[_selectedVehicleIndex];
 
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+
     try {
-      final response = await Supabase.instance.client
+      await Supabase.instance.client
           .from('trip_requests')
           .insert({
+            'user_id': userId,
             'pickup_location': pickup,
             'dropoff_location': dropoff,
             'vehicle_type': selectedVehicle.name,
             'start_date': _startDate.toIso8601String(),
             'passenger_count': _passengerCount,
+            'customer_name': customerName,
+            'customer_phone': customerPhone,
             'status': 'New',
           })
           .select('id')
           .single();
 
-      final tripId = response['id']?.toString();
-      if (tripId == null || tripId.isEmpty) {
-        throw const FormatException('Missing trip id');
-      }
-
       if (!mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PaymentScreen(
-            tripId: tripId,
-            vehicleName: selectedVehicle.name,
-            totalAmount: selectedVehicle.estimatedPrice.toDouble(),
-          ),
-        ),
-      );
+
+      // Clear form
+      _pickupController.clear();
+      _dropoffController.clear();
+      setState(() {
+        _passengerCount = 2;
+        _selectedVehicleIndex = 0;
+        _startDate = DateTime.now().add(const Duration(hours: 1));
+        _endDate = _startDate.add(const Duration(hours: 4));
+      });
+
+      _showSuccessDialog();
     } on AuthException catch (error) {
       if (!mounted) return;
       _showSnackBar(error.message, isError: true);
@@ -277,6 +312,96 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
     } finally {
       if (mounted) setState(() => _isBooking = false);
     }
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primaryContainer, AppColors.primary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: AppColors.onPrimary,
+                  size: 36,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Request Sent!',
+                style: TextStyle(
+                  fontFamily: 'Manrope',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.onSurface,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Your trip request has been sent to the admin. '
+                'You will receive a quotation and driver details shortly.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 14,
+                  color: AppColors.onSurfaceVariant.withValues(alpha: 0.7),
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              GestureDetector(
+                onTap: () => Navigator.of(ctx).pop(),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        AppColors.primaryContainer,
+                        AppColors.primary,
+                      ],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(9999),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Got it',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
@@ -771,31 +896,25 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
                 ],
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  vehicle.priceLabel,
-                  style: TextStyle(
-                    fontFamily: 'Manrope',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: isSelected
-                        ? AppColors.primaryContainer
-                        : AppColors.onSurface,
-                  ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primaryContainer.withValues(alpha: 0.1)
+                    : AppColors.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${vehicle.capacity} seats',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: isSelected
+                      ? AppColors.primaryContainer
+                      : AppColors.onSurfaceVariant.withValues(alpha: 0.6),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${vehicle.capacity} seats',
-                  style: TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.onSurfaceVariant.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ),
@@ -809,7 +928,7 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
       child: Column(
         children: [
           GestureDetector(
-            onTap: _isBooking ? null : _bookTrip,
+            onTap: _isBooking ? null : _showContactSheet,
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 18),
@@ -869,7 +988,7 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    '${selectedVehicle.name} - ${selectedVehicle.priceLabel} - $_passengerCount passenger(s)',
+                    '${selectedVehicle.name} - ${selectedVehicle.capacity} seats - $_passengerCount passenger(s)',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontFamily: 'Plus Jakarta Sans',
@@ -881,6 +1000,241 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Contact Bottom Sheet Widget ─────────────────────────────
+class _ContactBottomSheet extends StatefulWidget {
+  final TextEditingController nameController;
+  final TextEditingController phoneController;
+  final bool isBooking;
+  final VoidCallback onSubmit;
+
+  const _ContactBottomSheet({
+    required this.nameController,
+    required this.phoneController,
+    required this.isBooking,
+    required this.onSubmit,
+  });
+
+  @override
+  State<_ContactBottomSheet> createState() => _ContactBottomSheetState();
+}
+
+class _ContactBottomSheetState extends State<_ContactBottomSheet> {
+  bool _canSubmit = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.nameController.addListener(_updateSubmitState);
+    widget.phoneController.addListener(_updateSubmitState);
+  }
+
+  void _updateSubmitState() {
+    final ready = widget.nameController.text.trim().isNotEmpty &&
+        widget.phoneController.text.trim().length >= 10;
+    if (ready != _canSubmit) {
+      setState(() => _canSubmit = ready);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+        decoration: const BoxDecoration(
+          color: AppColors.surfaceContainerLowest,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 38,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.outlineVariant.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Title
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primaryContainer, AppColors.primary],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.person_rounded,
+                    color: AppColors.onPrimary,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Contact Details',
+                        style: TextStyle(
+                          fontFamily: 'Manrope',
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.onSurface,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'We\'ll share this with the driver',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 12,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Name field
+            _buildField(
+              controller: widget.nameController,
+              label: 'Full Name',
+              hint: 'Enter your name',
+              icon: Icons.badge_outlined,
+              keyboardType: TextInputType.name,
+            ),
+            const SizedBox(height: 16),
+
+            // Phone field
+            _buildField(
+              controller: widget.phoneController,
+              label: 'Phone Number',
+              hint: '10-digit mobile number',
+              icon: Icons.phone_outlined,
+              keyboardType: TextInputType.phone,
+              maxLength: 15,
+            ),
+            const SizedBox(height: 24),
+
+            // Submit button
+            GestureDetector(
+              onTap: _canSubmit && !widget.isBooking ? widget.onSubmit : null,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  gradient: _canSubmit
+                      ? const LinearGradient(
+                          colors: [
+                            AppColors.secondaryContainer,
+                            AppColors.secondary,
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        )
+                      : null,
+                  color: _canSubmit ? null : AppColors.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(9999),
+                  boxShadow: _canSubmit
+                      ? [
+                          BoxShadow(
+                            color: AppColors.secondary.withValues(alpha: 0.25),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ]
+                      : [],
+                ),
+                child: Center(
+                  child: Text(
+                    _canSubmit ? 'Confirm & Create Trip' : 'Enter name & phone to continue',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: _canSubmit
+                          ? AppColors.onSecondary
+                          : AppColors.onSurfaceVariant.withValues(alpha: 0.45),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    required TextInputType keyboardType,
+    int? maxLength,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: AppColors.primaryContainer, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              keyboardType: keyboardType,
+              maxLength: maxLength,
+              decoration: InputDecoration(
+                labelText: label,
+                hintText: hint,
+                border: InputBorder.none,
+                counterText: '',
+              ),
             ),
           ),
         ],
