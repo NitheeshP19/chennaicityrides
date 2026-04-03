@@ -1,0 +1,13 @@
+.env
+.docker-local/
+*.log
+client_secret*.json
+.vscode/
+.idea/
+**/build/
+**.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/

@@ -1,0 +1,16 @@
+services:
+  driver-tracker:
+    build:
+      context: ./driver_tracker
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    restart: always
+
+  admin-panel:
+    build:
+      context: ./admin_panel
+      dockerfile: Dockerfile
+    ports:
+      - "8081:80"
+    restart: always

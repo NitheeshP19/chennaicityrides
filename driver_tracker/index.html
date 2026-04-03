@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Tracker | Chennai City Rides</title>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --emerald-primary: #166534;
+            --emerald-light: #22c55e;
+            --premium-orange: #F97316;
+            --surface: #ffffff;
+            --bg: #f3f4f6;
+            --text-main: #1f2937;
+            --text-mut: #6b7280;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .tracker-card {
+            background-color: var(--surface);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .icon-container {
+            width: 72px;
+            height: 72px;
+            background-color: rgba(22, 101, 52, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .icon-container svg {
+            width: 36px;
+            height: 36px;
+            fill: var(--emerald-primary);
+        }
+
+        h1 {
+            font-size: 24px;
+            margin: 0 0 8px;
+            color: var(--emerald-primary);
+            font-weight: 700;
+        }
+
+        .trip-id {
+            font-size: 14px;
+            color: var(--text-mut);
+            font-family: monospace;
+            background: var(--bg);
+            padding: 4px 12px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 24px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            background-color: rgba(22, 101, 52, 0.1);
+            color: var(--emerald-primary);
+            border-radius: 99px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .status-badge.error {
+            background-color: rgba(249, 115, 22, 0.1);
+            color: var(--premium-orange);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--emerald-light);
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-badge.error .dot {
+            background-color: var(--premium-orange);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        .coords {
+            background: var(--bg);
+            padding: 16px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 14px;
+            color: var(--text-main);
+            text-align: left;
+        }
+
+        .coords div {
+            margin-bottom: 8px;
+        }
+        .coords div:last-child {
+            margin-bottom: 0;
+        }
+
+        .label {
+            color: var(--text-mut);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tracker-card">
+        <div class="icon-container">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+        </div>
+        
+        <h1>Driver Live Tracker</h1>
+        <div class="trip-id" id="tripIdDisplay">Loading Trip Session...</div>
+
+        <div>
+            <div class="status-badge" id="statusBadge">
+                <div class="dot"></div>
+                Initializing Signal...
+            </div>
+        </div>
+
+        <div class="coords">
+            <span class="label">Current Coordinates</span>
+            <div>Lat: <span id="latDisplay">--.------</span></div>
+            <div>Lng: <span id="lngDisplay">--.------</span></div>
+            <div style="margin-top: 12px; border-top: 1px solid #e5e7eb; padding-top: 12px;">
+                <span class="label">Last Updated</span>
+                <span id="timeDisplay">--:--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://dycanquxbnecrritcoou.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5Y2FucXV4Ym5lY3JyaXRjb291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMjc1MzEsImV4cCI6MjA5MDYwMzUzMX0.i85iLktslLTHZAF3V0xn8_5FKLwqUXqQP6eAai9rSyk';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const tripId = urlParams.get('trip_id');
+
+        const tripIdDisplay = document.getElementById('tripIdDisplay');
+        const statusBadge = document.getElementById('statusBadge');
+        const latDisplay = document.getElementById('latDisplay');
+        const lngDisplay = document.getElementById('lngDisplay');
+        const timeDisplay = document.getElementById('timeDisplay');
+
+        if (!tripId) {
+            tripIdDisplay.textContent = 'NO TRIP ASSIGNED';
+            showError('Missing trip_id in URL');
+        } else {
+            tripIdDisplay.textContent = 'Trip: ' + tripId;
+            startTracking();
+        }
+
+        function showError(msg) {
+            statusBadge.className = 'status-badge error';
+            statusBadge.innerHTML = `<div class="dot"></div>${msg}`;
+        }
+
+        function showTracking() {
+            statusBadge.className = 'status-badge';
+            statusBadge.innerHTML = `<div class="dot"></div>Transmitting Live...`;
+        }
+
+        async function updateLocation(lat, lng) {
+            const now = new Date();
+            
+            // Update UI
+            latDisplay.textContent = lat.toFixed(6);
+            lngDisplay.textContent = lng.toFixed(6);
+            timeDisplay.textContent = now.toLocaleTimeString();
+            showTracking();
+
+            // Push to Supabase driver_locations table
+            // We'll use upsert so there's always one row per trip_id streaming live
+            try {
+                const { error } = await supabase
+                    .from('driver_locations')
+                    .upsert({ 
+                        trip_id: tripId, 
+                        latitude: lat, 
+                        longitude: lng,
+                        updated_at: now.toISOString()
+                    }, { onConflict: 'trip_id' });
+                
+                if (error) {
+                    console.error("Supabase Error:", error);
+                    showError('Database sync failed');
+                }
+            } catch (err) {
+                console.error("Network Error:", err);
+                showError('Network offline');
+            }
+        }
+
+        function startTracking() {
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (!window.isSecureContext && !isLocalhost) {
+                showError('GPS works only on localhost or HTTPS');
+                return;
+            }
+
+            if (!("geolocation" in navigator)) {
+                showError('Geolocation not supported');
+                return;
+            }
+
+            // Using setInterval to strictly ping every 5 seconds for battery savings
+            // rather than watchPosition which fires constantly unpredictably 
+            
+            const pingLocation = () => {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        updateLocation(latitude, longitude);
+                    },
+                    (error) => {
+                        console.error("GPS Error:", error);
+                        showError(error.message || 'GPS Signal Lost');
+                    },
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+            };
+
+            // First ping immediate
+            pingLocation();
+            // Then every 5s
+            setInterval(pingLocation, 5000);
+        }
+    </script>
+</body>
+</html>
