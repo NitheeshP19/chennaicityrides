@@ -69,6 +69,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
     // ── Build the realtime stream ONCE (filtered by current user) ──
     final user = _client.auth.currentUser;
     if (user != null) {
+      debugPrint('👤 USER ID: ${user.id}');
       _tripsStream = _client
           .from('trip_requests')
           .stream(primaryKey: ['id'])
@@ -76,6 +77,17 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
           .order('created_at', ascending: false);
 
       _setupNotifications();
+
+      // ── 🔥 REALTIME VERIFICATION (debug — remove in production) ──
+      _client
+          .from('trip_requests')
+          .stream(primaryKey: ['id'])
+          .listen((data) {
+        debugPrint('🔥 REALTIME WORKING: ${data.length} rows received');
+        for (final row in data) {
+          debugPrint('   ➤ id=${row['id']} status=${row['status']} driver=${row['driver_name']} price=${row['price']}');
+        }
+      });
     } else {
       // Fallback: empty stream if somehow not logged in
       _tripsStream = const Stream.empty();
