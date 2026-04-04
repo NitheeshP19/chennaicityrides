@@ -1,0 +1,6 @@
+{
+  "framework": null,
+  "buildCommand": "echo 'Deploying local pre-built web files...'",
+  "outputDirectory": "build/web",
+  "cleanUrls": true
+}

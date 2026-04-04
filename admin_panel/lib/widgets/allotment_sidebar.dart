@@ -68,8 +68,7 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
 
   String get _trackerLink {
     final tripId = widget.tripData['id'].toString();
-    final String trackerBaseUrl = "https://nitheeshp19.github.io/chennaicityrides/";
-    return "$trackerBaseUrl?trip_id=$tripId";
+    return "https://nitheeshp19.github.io/chennaicityrides/?trip_id=$tripId";
   }
 
   Future<void> _allotVehicle() async {
