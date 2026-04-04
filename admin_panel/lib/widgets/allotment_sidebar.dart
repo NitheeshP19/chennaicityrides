@@ -67,22 +67,11 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
   }
 
   String get _trackerLink {
-    const configuredBaseUrl = String.fromEnvironment('DRIVER_TRACKER_URL');
     final tripId = widget.tripData['id'].toString();
-
-    if (configuredBaseUrl.isNotEmpty) {
-      return Uri.parse(
-        configuredBaseUrl,
-      ).replace(queryParameters: {'trip_id': tripId}).toString();
-    }
-
-    final current = Uri.base;
-    final inferredPort = current.port == 8081 ? 8080 : current.port;
-
-    return Uri(
-      scheme: current.scheme,
-      host: current.host,
-      port: inferredPort == 80 || inferredPort == 443 ? null : inferredPort,
+    // Production GitHub Pages URL
+    const baseUrl = 'https://nitheeshp19.github.io/chennaicityrides/';
+    
+    return Uri.parse(baseUrl).replace(
       queryParameters: {'trip_id': tripId},
     ).toString();
   }
