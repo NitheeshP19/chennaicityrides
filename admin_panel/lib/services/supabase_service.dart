@@ -16,14 +16,23 @@ class SupabaseService {
     required String tripId,
     required String driverName,
     required String driverPhone,
-    required double quotedPrice,
+    required String vehicleType,
+    required double price,
   }) async {
-    await _client.from('trip_requests').update({
-      'driver_name': driverName,
-      'driver_phone': driverPhone,
-      'quoted_price': quotedPrice,
-      'status': 'Pending_Payment',
-    }).eq('id', tripId);
+    final response = await _client.functions.invoke(
+      'allot-trip',
+      body: {
+        'trip_id': tripId,
+        'driver_name': driverName,
+        'driver_phone': driverPhone,
+        'vehicle_type': vehicleType,
+        'price': price,
+      },
+    );
+
+    if (response.status != 200) {
+      throw Exception('Failed to allot trip: ${response.data}');
+    }
   }
 
   // Stream driver locations for a specific trip

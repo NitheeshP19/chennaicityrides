@@ -92,8 +92,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   itemBuilder: (context, index) {
                     final trip = trips[index];
                     final isSelected = trip['id'] == _selectedTrip?['id'];
-                    final status = _displayValue(trip['status'], 'New');
-                    final isAllotted = status == 'Allotted' || status == 'Pending_Payment';
+                    final statusValue = _displayValue(trip['status'], 'pending');
+                    final isAllotted = statusValue != 'pending';
+                    final statusLabel = statusValue.replaceAll('_', ' ').split(' ').map((word) => word.isEmpty ? "" : "${word[0].toUpperCase()}${word.substring(1)}").join(' ');
                     final pickup = _displayValue(
                       trip['pickup_location'],
                       'Pickup pending',
@@ -176,7 +177,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           ),
                                         ),
                                         child: Text(
-                                          status,
+                                          statusLabel,
                                           style: TextStyle(
                                             color: isAllotted
                                                 ? EmeraldOrbitTheme.primaryGreen

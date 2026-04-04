@@ -18,6 +18,8 @@ class _Colors {
   static const outlineVariant = Color(0xFFBFC9BD);
   static const onPrimary = Color(0xFFFFFFFF);
   static const primaryFixed = Color(0xFFA6F4B5);
+  static const inProgress = Color(0xFF3B82F6);
+  static const completed = Color(0xFF10B981);
 }
 
 class MyBookingsScreen extends StatefulWidget {
@@ -33,6 +35,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+  StreamSubscription<List<Map<String, dynamic>>>? _statusSubscription;
+  final Map<String, String> _lastKnownStatuses = {};
 
   @override
   void initState() {
@@ -46,10 +50,57 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
       curve: Curves.easeOut,
     );
     _fadeController.forward();
+
+    _setupStatusListener();
+  }
+
+  void _setupStatusListener() {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    _statusSubscription = _client
+        .from('trip_requests')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .listen((trips) {
+      if (!mounted) return;
+
+      for (final trip in trips) {
+        final id = trip['id'].toString();
+        final status = trip['status']?.toString().toLowerCase();
+        final lastStatus = _lastKnownStatuses[id];
+
+        // Notify if it moves from pending to pending_payment
+        if (lastStatus == 'pending' && status == 'pending_payment') {
+          _showNotification('New quote received for your ride!');
+        }
+
+        _lastKnownStatuses[id] = status ?? '';
+      }
+    });
+  }
+
+  void _showNotification(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.notifications_active_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: _Colors.primaryContainer,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _statusSubscription?.cancel();
     _fadeController.dispose();
     super.dispose();
   }
@@ -79,27 +130,39 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'allotted':
-        return _Colors.primaryContainer;
+      case 'pending':
+        return const Color(0xFF6B7280);
       case 'pending_payment':
         return _Colors.secondary;
+      case 'approved':
+        return _Colors.primaryContainer;
+      case 'assigned':
+        return _Colors.primaryContainer;
+      case 'in_progress':
+        return _Colors.inProgress;
       case 'completed':
-        return const Color(0xFF6B7280);
+        return _Colors.completed;
       case 'cancelled':
         return const Color(0xFFDC2626);
       default:
-        return _Colors.secondary;
+        return const Color(0xFF6B7280);
     }
   }
 
   IconData _statusIcon(String status) {
     switch (status.toLowerCase()) {
-      case 'allotted':
-        return Icons.directions_car_filled_rounded;
+      case 'pending':
+        return Icons.timer_outlined;
       case 'pending_payment':
-        return Icons.hourglass_top_rounded;
-      case 'completed':
+        return Icons.request_quote_rounded;
+      case 'approved':
         return Icons.check_circle_rounded;
+      case 'assigned':
+        return Icons.person_pin_circle_rounded;
+      case 'in_progress':
+        return Icons.local_shipping_rounded;
+      case 'completed':
+        return Icons.task_alt_rounded;
       case 'cancelled':
         return Icons.cancel_rounded;
       default:
@@ -140,8 +203,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Trip $newStatus successfully'),
-          backgroundColor: newStatus == 'Cancelled' ? Colors.red : _Colors.primaryContainer,
+          content: Text('Trip ${newStatus.replaceAll('_', ' ')} successfully'),
+          backgroundColor: newStatus == 'cancelled' ? Colors.red : _Colors.primaryContainer,
         ),
       );
     } catch (e) {
@@ -316,11 +379,11 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
     final pickup = _display(trip['pickup_location'], 'Pickup not set');
     final dropoff = _display(trip['dropoff_location'], 'Dropoff not set');
     final driverName = _display(trip['driver_name'], 'Driver pending');
-    final quotedPrice = _display(trip['quoted_price'], '');
+    final price = _display(trip['price'], '');
     final createdAt = _formatDate(trip['created_at']?.toString());
     final startDate = _formatDate(trip['start_date']?.toString());
-    final isActive = status.toLowerCase() == 'allotted';
-    final isPending = status.toLowerCase() == 'pending_payment';
+    final isActive = ['assigned', 'in_progress'].contains(status.toLowerCase());
+    final isPendingPayment = status.toLowerCase() == 'pending_payment';
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -499,10 +562,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
           Row(
             children: [
               _buildDetailChip(Icons.person_rounded, driverName),
-              if (quotedPrice.isNotEmpty) ...[
+              if (price.isNotEmpty) ...[
                 const SizedBox(width: 10),
                 _buildDetailChip(
-                    Icons.currency_rupee_rounded, 'INR $quotedPrice'),
+                    Icons.currency_rupee_rounded, 'INR $price'),
               ],
             ],
           ),
@@ -564,13 +627,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
           ],
 
           // Accept/Reject buttons for Pending Payment
-          if (isPending) ...[
+          if (isPendingPayment) ...[
             const SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => _updateTripStatus(tripId, 'Cancelled'),
+                    onTap: () => _updateTripStatus(tripId, 'cancelled'),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
@@ -594,7 +657,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
                 const SizedBox(width: 12),
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => _updateTripStatus(tripId, 'Allotted'),
+                    onTap: () => _updateTripStatus(tripId, 'approved'),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(

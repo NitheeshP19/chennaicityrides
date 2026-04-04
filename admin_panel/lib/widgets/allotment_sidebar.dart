@@ -22,7 +22,8 @@ class AllotmentSidebar extends StatefulWidget {
 class _AllotmentSidebarState extends State<AllotmentSidebar> {
   final _driverNameController = TextEditingController();
   final _driverPhoneController = TextEditingController();
-  final _quotedPriceController = TextEditingController();
+  final _priceController = TextEditingController();
+  String _selectedVehicle = 'Car';
   bool _isLoading = false;
 
   @override
@@ -43,7 +44,7 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
   void dispose() {
     _driverNameController.dispose();
     _driverPhoneController.dispose();
-    _quotedPriceController.dispose();
+    _priceController.dispose();
     super.dispose();
   }
 
@@ -52,8 +53,9 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
         widget.tripData['driver_name']?.toString() ?? '';
     _driverPhoneController.text =
         widget.tripData['driver_phone']?.toString() ?? '';
-    _quotedPriceController.text =
-        widget.tripData['quoted_price']?.toString() ?? '';
+    _priceController.text =
+        widget.tripData['price']?.toString() ?? '';
+    _selectedVehicle = widget.tripData['vehicle_type']?.toString() ?? 'Car';
   }
 
   String _displayValue(dynamic value, String fallback) {
@@ -88,13 +90,13 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
   Future<void> _allotVehicle() async {
     final driverName = _driverNameController.text.trim();
     final driverPhone = _driverPhoneController.text.trim();
-    final quotedPrice = double.tryParse(_quotedPriceController.text.trim());
+    final price = double.tryParse(_priceController.text.trim());
 
-    if (driverName.isEmpty || driverPhone.isEmpty || quotedPrice == null) {
+    if (driverName.isEmpty || driverPhone.isEmpty || price == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Enter driver name, phone number, and a valid quoted price.',
+            'Enter driver name, phone number, and a valid price.',
           ),
           backgroundColor: Colors.red,
         ),
@@ -108,7 +110,8 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
         tripId: widget.tripData['id'].toString(),
         driverName: driverName,
         driverPhone: driverPhone,
-        quotedPrice: quotedPrice,
+        vehicleType: _selectedVehicle,
+        price: price,
       );
 
       if (!mounted) return;
@@ -134,8 +137,8 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
 
   @override
   Widget build(BuildContext context) {
-    final status = _displayValue(widget.tripData['status'], 'New');
-    final isAllotted = status == 'Allotted' || status == 'Pending_Payment';
+    final status = _displayValue(widget.tripData['status'], 'pending');
+    final isAllotted = status != 'pending';
 
     return Container(
       width: 400,
@@ -177,9 +180,40 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
                   _displayValue(widget.tripData['dropoff_location'], 'N/A'),
                 ),
                 const SizedBox(height: 12),
-                _buildInfoRow(
-                  'Vehicle',
-                  _displayValue(widget.tripData['vehicle_type'], 'N/A'),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Vehicle',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 4),
+                    isAllotted
+                        ? Text(
+                            _selectedVehicle,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          )
+                        : DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedVehicle,
+                              isExpanded: true,
+                              items:
+                                  ['Car', 'SUV', '12-Seater', '24-Seater']
+                                      .map(
+                                        (v) => DropdownMenuItem(
+                                          value: v,
+                                          child: Text(v),
+                                        ),
+                                      )
+                                      .toList(),
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() => _selectedVehicle = val);
+                                }
+                              },
+                            ),
+                          ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 _buildInfoRow(
@@ -222,11 +256,11 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
                 ),
                 const SizedBox(height: 16),
                 TextField(
-                  controller: _quotedPriceController,
+                  controller: _priceController,
                   enabled: !isAllotted,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
-                    labelText: 'Quoted Price (INR)',
+                    labelText: 'Trip Price (INR)',
                   ),
                 ),
               ],

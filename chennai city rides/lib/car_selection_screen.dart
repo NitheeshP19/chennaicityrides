@@ -279,10 +279,12 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
             'dropoff_location': dropoff,
             'vehicle_type': selectedVehicle.name,
             'start_date': _startDate.toIso8601String(),
+            'end_date': _endDate.toIso8601String(),
+            'travel_date': _startDate.toIso8601String(),
             'passenger_count': _passengerCount,
             'customer_name': customerName,
             'customer_phone': customerPhone,
-            'status': 'New',
+            'status': 'pending',
           })
           .select('id')
           .single();
@@ -303,10 +305,11 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
     } on AuthException catch (error) {
       if (!mounted) return;
       _showSnackBar(error.message, isError: true);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error creating trip request: $e');
       if (!mounted) return;
       _showSnackBar(
-        'Could not create the trip request. Please try again.',
+        'Could not create the trip request: $e',
         isError: true,
       );
     } finally {
