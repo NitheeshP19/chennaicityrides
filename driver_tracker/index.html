@@ -182,7 +182,7 @@
     const SUPABASE_URL = "https://dycanquxbnecrritcoou.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5Y2FucXV4Ym5lY3JyaXRjb291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMjc1MzEsImV4cCI6MjA5MDYwMzUzMX0.i85iLktslLTHZAF3V0xn8_5FKLwqUXqQP6eAai9rSyk";
     
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let supabase = null;
     const urlParams = new URLSearchParams(window.location.search);
     const tripId = urlParams.get("trip_id");
 
@@ -194,62 +194,92 @@
 
     let map = null, marker = null;
 
+    // Initialize Supabase on load to ensure the CDN script has fully parsed
+    window.addEventListener('load', () => {
+      try {
+        if (window.supabase) {
+          supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } else {
+          alert('Error: Supabase library failed to load. Please check your internet connection and refresh.');
+        }
+      } catch(e) {
+        alert('Supabase setup error: ' + e.message);
+      }
+    });
+
     // --- 2. START TRACKING LOGIC ---
     function handleStart() {
-      const btn = document.getElementById('startBtn');
-      const btnText = document.getElementById('btnText');
-      
-      btnText.innerText = "Requesting Signal...";
-      btn.style.opacity = "0.7";
-      btn.disabled = true;
+      try {
+        if (!supabase) {
+          alert("Database connection is not ready yet. Please wait a moment and try again.");
+          return;
+        }
 
-      navigator.geolocation.watchPosition(
-        async (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
+        const btn = document.getElementById('startBtn');
+        const btnText = document.getElementById('btnText');
+        
+        btnText.innerText = "Requesting Signal...";
+        btn.style.opacity = "0.7";
+        btn.disabled = true;
 
-          // Switch screen if first time
-          if (document.getElementById('mapScreen').classList.contains('hidden')) {
-            document.getElementById('permScreen').classList.add('hidden');
-            document.getElementById('mapScreen').classList.remove('hidden');
-            initMap(lat, lng);
-          }
-
-          updateLiveUI(lat, lng);
-
-          // ✅ UPLOAD TO DB (Your exact format)
-          const { error } = await supabase
-            .from("driver_locations")
-            .upsert({
-              trip_id: tripId,
-              latitude: lat,
-              longitude: lng,
-              updated_at: new Date().toISOString()
-            });
-
-          if (error) {
-            console.error("Supabase Error:", error);
-            document.getElementById('syncStatus').innerText = "⚠ Sync Error: " + error.message;
-            document.getElementById('statusPill').classList.remove('active');
-          } else {
-            document.getElementById('syncStatus').innerText = "✓ Live Synced to Cloud";
-            document.getElementById('syncTime').innerText = new Date().toLocaleTimeString();
-            document.getElementById('statusPill').classList.add('active');
-            document.getElementById('statusLabel').innerText = "Tracking Active";
-          }
-        },
-        (err) => {
+        if (!navigator.geolocation) {
+          alert("Geolocation is not supported by your browser.");
           btnText.innerText = "Start Tracking Session";
           btn.style.opacity = "1";
           btn.disabled = false;
-          let msg = "GPS Error. ";
-          if (err.code === 1) msg += "Permission Denied. Please allow location access.";
-          else if (err.code === 2) msg += "Position Unavailable. Check your GPS signal.";
-          else if (err.code === 3) msg += "Request timed out.";
-          alert(msg);
-        },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }
-      );
+          return;
+        }
+
+        navigator.geolocation.watchPosition(
+          async (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            // Switch screen if first time
+            if (document.getElementById('mapScreen').classList.contains('hidden')) {
+              document.getElementById('permScreen').classList.add('hidden');
+              document.getElementById('mapScreen').classList.remove('hidden');
+              initMap(lat, lng);
+            }
+
+            updateLiveUI(lat, lng);
+
+            // ✅ UPLOAD TO DB (Exact format required)
+            const { error } = await supabase
+              .from("driver_locations")
+              .upsert({
+                trip_id: tripId,
+                latitude: lat,
+                longitude: lng,
+                updated_at: new Date().toISOString()
+              });
+
+            if (error) {
+              console.error("Supabase Error:", error);
+              document.getElementById('syncStatus').innerText = "⚠ Sync Error: " + error.message;
+              document.getElementById('statusPill').classList.remove('active');
+            } else {
+              document.getElementById('syncStatus').innerText = "✓ Live Synced to Cloud";
+              document.getElementById('syncTime').innerText = new Date().toLocaleTimeString();
+              document.getElementById('statusPill').classList.add('active');
+              document.getElementById('statusLabel').innerText = "Tracking Active";
+            }
+          },
+          (err) => {
+            btnText.innerText = "Start Tracking Session";
+            btn.style.opacity = "1";
+            btn.disabled = false;
+            let msg = "GPS Error. ";
+            if (err.code === 1) msg += "Permission Denied. Please allow location access.";
+            else if (err.code === 2) msg += "Position Unavailable. Check your GPS signal.";
+            else if (err.code === 3) msg += "Request timed out. Trying to get a fix over 30s failed.";
+            alert(msg);
+          },
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }
+        );
+      } catch (e) {
+        alert("Unexpected error starting tracking: " + e.message);
+      }
     }
 
     // --- 3. UI RENDERING ---
