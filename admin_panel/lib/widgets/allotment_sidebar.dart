@@ -68,12 +68,8 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
 
   String get _trackerLink {
     final tripId = widget.tripData['id'].toString();
-    // Production GitHub Pages URL
-    const baseUrl = 'https://nitheeshp19.github.io/chennaicityrides/';
-    
-    return Uri.parse(baseUrl).replace(
-      queryParameters: {'trip_id': tripId},
-    ).toString();
+    final String trackerBaseUrl = "https://nitheeshp19.github.io/chennaicityrides/";
+    return "$trackerBaseUrl?trip_id=$tripId";
   }
 
   Future<void> _allotVehicle() async {

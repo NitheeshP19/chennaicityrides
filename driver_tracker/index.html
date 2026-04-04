@@ -185,6 +185,7 @@
     let supabase = null;
     const urlParams = new URLSearchParams(window.location.search);
     const tripId = urlParams.get("trip_id");
+    console.log("Trip ID:", tripId);
 
     // Check for ID immediately
     if (!tripId) {
