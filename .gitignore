@@ -5,6 +5,7 @@ client_secret*.json
 .vscode/
 .idea/
 **/build/
+!admin_panel/build/web/
 **.dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
