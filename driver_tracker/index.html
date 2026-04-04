@@ -6,674 +6,274 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#004C22" />
-  <title>Driver Tracker · Chennai City Rides</title>
+  <title>Live Tracking | Chennai City Rides</title>
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    /* ─── RESET ───────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --green:       #004C22;
-      --green-mid:   #166534;
-      --green-light: #22C55E;
-      --orange:      #F97316;
-      --orange-d:    #EA6A10;
-      --surface:     #FFFFFF;
-      --bg:          #F0F2F0;
-      --card:        #FFFFFF;
-      --text:        #191C1D;
-      --muted:       #6B7280;
-      --border:      #E5E7EB;
-      --shadow:      rgba(0,0,0,0.08);
-      --radius:      20px;
+      --primary: #004C22;
+      --primary-soft: #166534;
+      --accent: #22C55E;
+      --bg: #F0F4F1;
+      --surface: #FFFFFF;
+      --text: #111827;
+      --muted: #6B7280;
+      --shadow: 0 12px 40px rgba(0, 76, 34, 0.12);
     }
 
-    html, body {
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body, html { height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
 
-    /* ─── SCREENS ──────────────────────────────────────────────── */
+    /* --- Universal Screen Styles --- */
     .screen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.4s ease, transform 0.4s ease;
-      z-index: 10;
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 100;
+      transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .screen.hidden {
-      opacity: 0;
-      pointer-events: none;
-      transform: scale(0.97);
-      z-index: -1;
-    }
+    .screen.hidden { opacity: 0; pointer-events: none; z-index: -1; }
 
-    /* ─── PERMISSION SCREEN ────────────────────────────────────── */
-    #permScreen {
-      background: linear-gradient(160deg, #004C22 0%, #166534 45%, #1E7A40 100%);
-      padding: 24px;
+    /* --- UI Components --- */
+    .btn {
+      width: 100%; padding: 20px; background: linear-gradient(135deg, var(--primary-soft), var(--primary));
+      color: white; border: none; border-radius: 20px; font-weight: 700; font-size: 16px;
+      cursor: pointer; transition: all 0.2s ease; box-shadow: 0 8px 24px rgba(0, 76, 34, 0.3);
+      display: flex; align-items: center; justify-content: center; gap: 12px;
     }
+    .btn:active { transform: scale(0.96); box-shadow: 0 4px 12px rgba(0, 76, 34, 0.2); }
 
-    .perm-card {
-      background: var(--card);
-      border-radius: 28px;
-      padding: 40px 28px 32px;
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-      box-shadow: 0 32px 64px rgba(0,0,0,0.20);
-      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    /* --- Permission Screen --- */
+    #permScreen { background: linear-gradient(160deg, var(--primary) 0%, var(--primary-soft) 100%); padding: 24px; }
+    .card {
+      background: var(--surface); border-radius: 32px; padding: 48px 32px;
+      width: 100%; max-width: 400px; text-align: center; box-shadow: 0 40px 80px rgba(0,0,0,0.3);
+      animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(40px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-    .perm-icon-ring {
-      width: 88px;
-      height: 88px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #22C55E22, #004C2222);
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 24px;
-      border: 2px solid rgba(34,197,94,0.25);
-      animation: breathe 3s ease-in-out infinite;
+    .ring-container {
+      width: 100px; height: 100px; border-radius: 50%; background: #F0FAF3;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 32px;
+      position: relative;
     }
-    @keyframes breathe {
-      0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.3); }
-      50%      { box-shadow: 0 0 0 18px rgba(34,197,94,0); }
+    .ring-pulse {
+      position: absolute; width: 100%; height: 100%; border-radius: 50%;
+      background: var(--accent); opacity: 0.15; animation: ping 2.5s infinite;
     }
-    .perm-icon-ring svg { width: 40px; height: 40px; }
+    @keyframes ping { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(2); opacity: 0; } }
 
-    .perm-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(34,197,94,0.10);
-      color: var(--green-mid);
-      font-size: 11px; font-weight: 700;
-      letter-spacing: 0.8px; text-transform: uppercase;
-      padding: 5px 14px; border-radius: 99px;
-      margin-bottom: 16px;
-    }
-    .perm-badge-dot {
-      width: 6px; height: 6px;
-      background: var(--green-light);
-      border-radius: 50%;
-    }
+    h1 { font-family: 'Manrope', sans-serif; font-size: 28px; font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
+    .sub { font-size: 15px; color: var(--muted); margin-bottom: 36px; line-height: 1.6; padding: 0 10px; }
 
-    .perm-title {
-      font-family: 'Manrope', sans-serif;
-      font-size: 26px; font-weight: 800;
-      color: var(--text); letter-spacing: -0.6px;
-      margin-bottom: 10px; line-height: 1.2;
-    }
-    .perm-sub {
-      font-size: 14px; color: var(--muted);
-      line-height: 1.6; margin-bottom: 32px;
-    }
-
-    /* Trip pill */
-    .trip-pill {
-      background: var(--bg);
-      border-radius: 12px;
-      padding: 12px 16px;
-      display: flex; align-items: center; gap: 10px;
-      margin-bottom: 28px; text-align: left;
-    }
-    .trip-pill-icon {
-      width: 36px; height: 36px; border-radius: 10px;
-      background: linear-gradient(135deg, var(--green-mid), var(--green));
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .trip-pill-icon svg { width: 18px; height: 18px; fill: #fff; }
-    .trip-pill-label { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
-    .trip-pill-id { font-size: 13px; color: var(--text); font-weight: 700; font-family: monospace; }
-
-    /* Start button */
-    #startBtn {
-      width: 100%; padding: 18px;
-      background: linear-gradient(135deg, var(--green-mid), var(--green));
-      color: #fff; border: none; border-radius: 16px;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 16px; font-weight: 700; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      box-shadow: 0 8px 24px rgba(22,101,52,0.4);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      letter-spacing: 0.2px;
-    }
-    #startBtn:active { transform: scale(0.97); box-shadow: 0 4px 12px rgba(22,101,52,0.3); }
-    #startBtn svg { width: 20px; height: 20px; fill: #fff; }
-
-    /* Denied card */
-    #deniedCard {
-      display: none;
-      background: #FFF7ED;
-      border: 1px solid rgba(249,115,22,0.2);
-      border-radius: 14px; padding: 16px;
-      margin-top: 16px; text-align: left;
-      gap: 12px; align-items: flex-start;
-    }
-    #deniedCard.show { display: flex; }
-    .denied-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
-    .denied-text { font-size: 13px; color: var(--orange-d); line-height: 1.5; font-weight: 500; }
-
-    /* Loading state */
-    .spinner {
-      width: 22px; height: 22px;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      display: none;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ─── MAP SCREEN ────────────────────────────────────────────── */
-    #mapScreen { display: flex; flex-direction: column; background: #1a1a1a; }
-    #mapScreen.hidden { display: none; }
-
-    /* Top HUD */
+    /* --- Map Screen --- */
+    #map { flex: 1; width: 100%; height: 100%; z-index: 10; }
+    
     .hud {
-      position: absolute; top: 0; left: 0; right: 0;
-      z-index: 1000; padding: 48px 16px 0;
-      pointer-events: none;
-    }
-    .hud-inner {
-      background: rgba(255,255,255,0.96);
-      backdrop-filter: blur(16px) saturate(180%);
-      -webkit-backdrop-filter: blur(16px) saturate(180%);
-      border-radius: 20px;
-      padding: 14px 18px;
-      display: flex; align-items: center; gap: 14px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-      pointer-events: auto;
-    }
-
-    .hud-logo {
-      width: 40px; height: 40px; border-radius: 12px;
-      background: linear-gradient(135deg, var(--green-mid), var(--green));
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .hud-logo svg { width: 20px; height: 20px; fill: #fff; }
-
-    .hud-text { flex: 1; min-width: 0; }
-    .hud-title { font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 800; color: var(--text); }
-    .hud-trip { font-size: 11px; color: var(--muted); font-family: monospace; }
-
-    /* Status pill inside HUD */
-    .status-pill {
-      display: flex; align-items: center; gap: 6px;
-      border-radius: 99px; padding: 6px 12px;
-      font-size: 12px; font-weight: 700;
-      flex-shrink: 0; transition: background 0.3s ease, color 0.3s ease;
-    }
-    .status-pill.active { background: rgba(34,197,94,0.12); color: var(--green-mid); }
-    .status-pill.loading { background: rgba(249,115,22,0.12); color: var(--orange); }
-    .status-pill.error { background: rgba(220,38,38,0.10); color: #DC2626; }
-    .pill-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .status-pill.active  .pill-dot { background: var(--green-light); animation: pulse 2s infinite; }
-    .status-pill.loading .pill-dot { background: var(--orange); animation: pulse-o 1s infinite; }
-    .status-pill.error   .pill-dot { background: #DC2626; animation: none; }
-    @keyframes pulse   { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)} 70%{box-shadow:0 0 0 8px rgba(34,197,94,0)} }
-    @keyframes pulse-o { 0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,.4)} 70%{box-shadow:0 0 0 8px rgba(249,115,22,0)} }
-
-    /* Map itself — needs explicit height for Leaflet */
-    #map {
-      flex: 1; width: 100%; height: 100%; min-height: 100%;
-      z-index: 0;
-    }
-
-    /* Bottom sheet */
-    .bottom-sheet {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      z-index: 1000; padding: 0 16px 24px;
-    }
-    .bottom-sheet-inner {
-      background: rgba(255,255,255,0.96);
-      backdrop-filter: blur(16px) saturate(180%);
-      -webkit-backdrop-filter: blur(16px) saturate(180%);
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 -4px 32px rgba(0,0,0,0.10);
-    }
-
-    .bs-handle {
-      width: 36px; height: 4px; border-radius: 999px;
-      background: var(--border); margin: 0 auto 18px;
-    }
-
-    .bs-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 10px; margin-bottom: 14px;
-    }
-    .bs-stat {
-      background: var(--bg); border-radius: 14px;
-      padding: 14px; display: flex; flex-direction: column; gap: 4px;
-    }
-    .bs-stat-label {
-      font-size: 10px; font-weight: 700; letter-spacing: 0.7px;
-      text-transform: uppercase; color: var(--muted);
-    }
-    .bs-stat-value {
-      font-family: 'Manrope', sans-serif;
-      font-size: 16px; font-weight: 800; color: var(--text);
-      font-variant-numeric: tabular-nums;
-    }
-    .bs-stat-value.mono { font-family: monospace; font-size: 13px; }
-
-    .bs-footer {
+      position: absolute; top: 50px; left: 16px; right: 16px; z-index: 1000;
+      background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+      padding: 16px 20px; border-radius: 24px; box-shadow: var(--shadow);
       display: flex; align-items: center; justify-content: space-between;
     }
-    .bs-accuracy {
-      font-size: 12px; color: var(--muted); font-weight: 500;
+    .hud-title { font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .status-pill {
+      display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700;
+      background: #F1F5F9; padding: 8px 14px; border-radius: 99px; transition: all 0.3s;
     }
-    .bs-timestamp {
-      font-size: 12px; color: var(--muted);
-      font-family: monospace; font-weight: 600;
+    .status-pill.active { background: #DCFCE7; color: var(--primary); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #94A3B8; }
+    .status-pill.active .dot { background: var(--accent); animation: glow 2s infinite; }
+    @keyframes glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } }
+
+    .tracking-sheet {
+      position: absolute; bottom: 24px; left: 16px; right: 16px; z-index: 1000;
+      background: rgba(255, 255, 255, 0.98); padding: 24px; border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .stat-box { background: #F8FAFC; padding: 16px; border-radius: 18px; display: flex; flex-direction: column; gap: 4px; }
+    .stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+    .stat-value { font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); }
+    
+    .sync-meta {
+      border-top: 1px solid #F1F5F9; padding-top: 16px; display: flex;
+      justify-content: space-between; align-items: center; font-size: 11px;
+      font-weight: 600; color: var(--muted);
     }
 
-    /* Leaflet custom driver marker */
+    /* Driver Marker Styles */
     .driver-marker {
-      width: 64px; height: 64px; border-radius: 50%;
-      background: rgba(34,197,94,0.15);
-      border: 3px solid var(--green-light);
+      width: 60px; height: 60px; background: rgba(34, 197, 94, 0.2);
+      border: 3px solid white; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
       display: flex; align-items: center; justify-content: center;
-      animation: markerPulse 2.5s ease-in-out infinite;
-      box-shadow: 0 0 0 0 rgba(34,197,94,0.4);
     }
-    @keyframes markerPulse {
-      0%  { box-shadow: 0 0 0  0px rgba(34,197,94,0.4); }
-      70% { box-shadow: 0 0 0 20px rgba(34,197,94,0);   }
-      100%{ box-shadow: 0 0 0  0px rgba(34,197,94,0);   }
-    }
-    .driver-marker-inner {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--green-mid), var(--green));
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 12px rgba(22,101,52,0.5);
-    }
-    .driver-marker-inner svg { width: 18px; height: 18px; fill: #fff; }
-
-    /* No-trip overlay */
-    #noTripScreen {
-      background: linear-gradient(160deg, #004C22 0%, #166534 100%);
-      text-align: center; padding: 40px 24px; color: #fff;
-    }
-    .no-trip-icon { font-size: 64px; margin-bottom: 24px; }
-    .no-trip-title { font-family: 'Manrope',sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 10px; }
-    .no-trip-sub { font-size: 14px; opacity: 0.7; line-height: 1.6; }
+    .marker-inner { width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .marker-inner svg { width: 20px; height: 20px; fill: white; }
   </style>
 </head>
 <body>
 
-<!-- ── NO TRIP SCREEN ──────────────────────────────────────────── -->
-<div class="screen hidden" id="noTripScreen">
-  <div class="no-trip-icon">🔗</div>
-  <div class="no-trip-title">Invalid Tracker Link</div>
-  <div class="no-trip-sub">No trip_id found in the URL.<br>Please use the link sent by the admin.</div>
-</div>
-
-<!-- ── PERMISSION SCREEN ───────────────────────────────────────── -->
-<div class="screen hidden" id="permScreen">
-  <div class="perm-card">
-    <div class="perm-icon-ring">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="11" r="3"/>
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-      </svg>
-    </div>
-
-    <div class="perm-badge">
-      <div class="perm-badge-dot"></div>
-      Chennai City Rides
-    </div>
-
-    <h1 class="perm-title">Enable Live<br>Location</h1>
-    <p class="perm-sub">We need your GPS location to start tracking your trip and keep the customer updated in real time.</p>
-
-    <!-- Trip pill -->
-    <div class="trip-pill">
-      <div class="trip-pill-icon">
-        <svg viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18.4 10c-.4-1.1-1.4-2-2.4-2H12L9.6 6.5C9.2 6.2 8.6 6 8 6H4c-.6 0-1 .4-1 1v10c0 .6.4 1 1 1h2"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+  <!-- Permission Screen -->
+  <div id="permScreen" class="screen">
+    <div class="card">
+      <div class="ring-container">
+        <div class="ring-pulse"></div>
+        <span style="font-size: 40px; z-index: 2;">📍</span>
       </div>
-      <div>
-        <div class="trip-pill-label">Trip ID</div>
-        <div class="trip-pill-id" id="tripPillId">Loading…</div>
-      </div>
-    </div>
-
-    <button id="startBtn" onclick="requestPermission()">
-      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-      <span id="startBtnText">Start Tracking</span>
-      <div class="spinner" id="startSpinner"></div>
-    </button>
-
-    <div id="deniedCard">
-      <div class="denied-icon">⚠️</div>
-      <div class="denied-text" id="deniedMsg">Location was denied. Please allow location access in your browser settings, then refresh this page.</div>
+      <h1>Enable Live<br>Tracking</h1>
+      <p class="sub">Your location helps the customer see your progress and prepares them for your arrival.</p>
+      <button class="btn" id="startBtn" onclick="handleStart()">
+        <span id="btnText">Start Tracking Session</span>
+        <svg id="arrowIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </button>
     </div>
   </div>
-</div>
 
-<!-- ── MAP / TRACKING SCREEN ───────────────────────────────────── -->
-<div class="screen hidden" id="mapScreen">
-  <!-- Top HUD -->
-  <div class="hud">
-    <div class="hud-inner">
-      <div class="hud-logo">
-        <svg viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18.4 10c-.4-1.1-1.4-2-2.4-2H12L9.6 6.5C9.2 6.2 8.6 6 8 6H4c-.6 0-1 .4-1 1v10c0 .6.4 1 1 1h2"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+  <!-- Map Screen -->
+  <div id="mapScreen" class="screen hidden">
+    <div class="hud">
+      <div class="hud-title">
+        <span style="background: var(--primary); color: white; padding: 4px 8px; border-radius: 8px; font-size: 10px;">RIDES</span>
+        Live GPS Signal
       </div>
-      <div class="hud-text">
-        <div class="hud-title">Driver Tracker</div>
-        <div class="hud-trip" id="hudTripId">—</div>
+      <div id="statusPill" class="status-pill">
+        <div class="dot"></div>
+        <span id="statusLabel">Awaiting...</span>
       </div>
-      <div class="status-pill loading" id="statusPill">
-        <div class="pill-dot"></div>
-        <span id="statusText">Getting GPS…</span>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="tracking-sheet">
+      <div class="stats-row">
+        <div class="stat-box">
+          <span class="stat-label">Latitude</span>
+          <span class="stat-value" id="latVal">--.------</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Longitude</span>
+          <span class="stat-value" id="lngVal">--.------</span>
+        </div>
+      </div>
+      <div class="sync-meta">
+        <span id="syncStatus">Not connected to Supabase</span>
+        <span id="syncTime">--:--:--</span>
       </div>
     </div>
   </div>
 
-  <!-- Leaflet Map -->
-  <div id="map"></div>
-
-  <!-- Bottom sheet -->
-  <div class="bottom-sheet">
-    <div class="bottom-sheet-inner">
-      <div class="bs-handle"></div>
-      <div class="bs-grid">
-        <div class="bs-stat">
-          <div class="bs-stat-label">Latitude</div>
-          <div class="bs-stat-value mono" id="bsLat">—</div>
-        </div>
-        <div class="bs-stat">
-          <div class="bs-stat-label">Longitude</div>
-          <div class="bs-stat-value mono" id="bsLng">—</div>
-        </div>
-        <div class="bs-stat">
-          <div class="bs-stat-label">Speed</div>
-          <div class="bs-stat-value" id="bsSpeed">— km/h</div>
-        </div>
-        <div class="bs-stat">
-          <div class="bs-stat-label">Accuracy</div>
-          <div class="bs-stat-value" id="bsAccuracy">— m</div>
-        </div>
-      </div>
-      <div class="bs-footer">
-        <div class="bs-accuracy" id="bsSyncStatus">Not yet synced</div>
-        <div class="bs-timestamp" id="bsTime">--:--:--</div>
-      </div>
-    </div>
+  <!-- Error Screen -->
+  <div id="errorScreen" class="screen hidden" style="background: #111827; color: white;">
+    <div style="font-size: 64px; margin-bottom: 24px;">⛔</div>
+    <h1 style="color: white;">Access Denied</h1>
+    <p style="opacity: 0.6; margin-top: 12px;">The <b>trip_id</b> is missing from the URL.<br>Please use the official link provided.</p>
   </div>
-</div>
 
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Supabase JS -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Leaflet & Supabase JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script>
-  // ─── CONFIG ─────────────────────────────────────────────────────
-  const SUPABASE_URL = 'https://dycanquxbnecrritcoou.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5Y2FucXV4Ym5lY3JyaXRjb291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMjc1MzEsImV4cCI6MjA5MDYwMzUzMX0.i85iLktslLTHZAF3V0xn8_5FKLwqUXqQP6eAai9rSyk';
-  const PING_INTERVAL_MS = 4000; // push every 4 seconds
+  <script>
+    // --- 1. CONFIGURATION ---
+    const SUPABASE_URL = "https://dycanquxbnecrritcoou.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5Y2FucXV4Ym5lY3JyaXRjb291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMjc1MzEsImV4cCI6MjA5MDYwMzUzMX0.i85iLktslLTHZAF3V0xn8_5FKLwqUXqQP6eAai9rSyk";
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const urlParams = new URLSearchParams(window.location.search);
+    const tripId = urlParams.get("trip_id");
 
-  // ─── STATE ──────────────────────────────────────────────────────
-  const urlParams  = new URLSearchParams(window.location.search);
-  const tripId     = urlParams.get('trip_id');
-  let   map        = null;
-  let   marker     = null;
-  let   watchId    = null;
-  let   lastLat    = null;
-  let   lastLng    = null;
-  let   pingTimer  = null;
-  let   supabase   = null;
-
-  // ─── INIT ────────────────────────────────────────────────────────
-  window.addEventListener('load', () => {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+    // Check for ID immediately
     if (!tripId) {
-      show('noTripScreen');
-      return;
+      document.getElementById('permScreen').classList.add('hidden');
+      document.getElementById('errorScreen').classList.remove('hidden');
     }
 
-    document.getElementById('tripPillId').textContent = tripId.slice(0, 16) + (tripId.length > 16 ? '…' : '');
-    document.getElementById('hudTripId').textContent  = 'Trip: ' + tripId.slice(0, 12) + '…';
-    show('permScreen');
-  });
+    let map = null, marker = null;
 
-  // ─── SCREEN MANAGER ─────────────────────────────────────────────
-  function show(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    const el = document.getElementById(id);
-    el.classList.remove('hidden');
-  }
+    // --- 2. START TRACKING LOGIC ---
+    function handleStart() {
+      const btn = document.getElementById('startBtn');
+      const btnText = document.getElementById('btnText');
+      
+      btnText.innerText = "Requesting Signal...";
+      btn.style.opacity = "0.7";
+      btn.disabled = true;
 
-  // ─── PERMISSION FLOW ────────────────────────────────────────────
-  function requestPermission() {
-    if (!('geolocation' in navigator)) {
-      showDenied('Geolocation is not supported on this device or browser.');
-      return;
+      navigator.geolocation.watchPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          // Switch screen if first time
+          if (document.getElementById('mapScreen').classList.contains('hidden')) {
+            document.getElementById('permScreen').classList.add('hidden');
+            document.getElementById('mapScreen').classList.remove('hidden');
+            initMap(lat, lng);
+          }
+
+          updateLiveUI(lat, lng);
+
+          // ✅ UPLOAD TO DB (Your exact format)
+          const { error } = await supabase
+            .from("driver_locations")
+            .upsert({
+              trip_id: tripId,
+              latitude: lat,
+              longitude: lng,
+              updated_at: new Date().toISOString()
+            });
+
+          if (error) {
+            console.error("Supabase Error:", error);
+            document.getElementById('syncStatus').innerText = "⚠ Sync Error: " + error.message;
+            document.getElementById('statusPill').classList.remove('active');
+          } else {
+            document.getElementById('syncStatus').innerText = "✓ Live Synced to Cloud";
+            document.getElementById('syncTime').innerText = new Date().toLocaleTimeString();
+            document.getElementById('statusPill').classList.add('active');
+            document.getElementById('statusLabel').innerText = "Tracking Active";
+          }
+        },
+        (err) => {
+          alert("GPS Permission Denied. Please enable location in browser settings and refresh.");
+          window.location.reload();
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+      );
     }
-    if (!window.isSecureContext) {
-      showDenied('This page must be served over HTTPS for GPS to work.');
-      return;
+
+    // --- 3. UI RENDERING ---
+    function initMap(lat, lng) {
+      map = L.map('map', { zoomControl: false }).setView([lat, lng], 17);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      const driverIcon = L.divIcon({
+        className: '',
+        html: `<div class="driver-marker"><div class="marker-inner"><svg viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18.4 10c-.4-1.1-1.4-2-2.4-2H12L9.6 6.5C9.2 6.2 8.6 6 8 6H4c-.6 0-1 .4-1 1v10c0 .6.4 1 1 1h2"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></div></div>`,
+        iconSize: [60, 60],
+        iconAnchor: [30, 30]
+      });
+
+      marker = L.marker([lat, lng], { icon: driverIcon }).addTo(map);
     }
 
-    // Show loading state on button
-    document.getElementById('startBtnText').textContent = 'Requesting GPS…';
-    document.getElementById('startSpinner').style.display = 'block';
-    document.getElementById('startBtn').disabled = true;
-    document.getElementById('deniedCard').classList.remove('show');
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        // Permission granted → go to map
-        launchMap(pos.coords.latitude, pos.coords.longitude);
-      },
-      (err) => {
-        // Reset button
-        document.getElementById('startBtnText').textContent = 'Retry';
-        document.getElementById('startSpinner').style.display = 'none';
-        document.getElementById('startBtn').disabled = false;
-
-        let msg = 'Location access was denied. ';
-        if (err.code === 1) msg += 'Please tap the lock icon in your browser and allow location access, then refresh.';
-        else if (err.code === 2) msg += 'Your GPS signal is unavailable. Try moving to an open area.';
-        else if (err.code === 3) msg += 'GPS request timed out. Please try again.';
-        showDenied(msg);
-      },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-    );
-  }
-
-  function showDenied(msg) {
-    document.getElementById('deniedMsg').textContent = msg;
-    document.getElementById('deniedCard').classList.add('show');
-  }
-
-  // ─── LAUNCH MAP ──────────────────────────────────────────────────
-  function launchMap(initLat, initLng) {
-    show('mapScreen');
-
-    // Small delay to ensure the map container has rendered dimensions
-    setTimeout(() => {
-      initMap(initLat, initLng);
-    }, 100);
-  }
-
-  function initMap(initLat, initLng) {
-    // Initialize Leaflet
-    map = L.map('map', {
-      center: [initLat, initLng],
-      zoom: 16,
-      zoomControl: false,
-      attributionControl: true,
-    });
-
-    // OpenStreetMap tile layer — 100% free
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19,
-    }).addTo(map);
-
-    // Custom driver marker using divIcon
-    const driverIcon = L.divIcon({
-      className: '',
-      html: `
-        <div class="driver-marker">
-          <div class="driver-marker-inner">
-            <svg viewBox="0 0 24 24">
-              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18.4 10c-.4-1.1-1.4-2-2.4-2H12L9.6 6.5C9.2 6.2 8.6 6 8 6H4c-.6 0-1 .4-1 1v10c0 .6.4 1 1 1h2"/>
-              <circle cx="7" cy="18" r="2"/>
-              <circle cx="17" cy="18" r="2"/>
-            </svg>
-          </div>
-        </div>`,
-      iconSize:   [64, 64],
-      iconAnchor: [32, 32],
-    });
-
-    marker = L.marker([initLat, initLng], { icon: driverIcon }).addTo(map);
-
-    // Force Leaflet to recalculate tile layout after container is visible
-    map.invalidateSize();
-
-    // Update UI immediately
-    updateDisplay(initLat, initLng, null, null);
-    pushLocation(initLat, initLng);
-
-    // Start watchPosition for smooth updates
-    watchId = navigator.geolocation.watchPosition(
-      onPosition,
-      onGpsError,
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
-    );
-
-    // Push to Supabase every PING_INTERVAL_MS regardless
-    pingTimer = setInterval(() => {
-      if (lastLat !== null && lastLng !== null) {
-        pushLocation(lastLat, lastLng);
+    function updateLiveUI(lat, lng) {
+      document.getElementById('latVal').innerText = lat.toFixed(6);
+      document.getElementById('lngVal').innerText = lng.toFixed(6);
+      
+      if (marker) {
+        marker.setLatLng([lat, lng]);
+        map.panTo([lat, lng], { animate: true, duration: 1.0 });
       }
-    }, PING_INTERVAL_MS);
-  }
-
-  // ─── ON GPS POSITION UPDATE ──────────────────────────────────────
-  function onPosition(pos) {
-    const { latitude, longitude, speed, accuracy } = pos.coords;
-    lastLat = latitude;
-    lastLng = longitude;
-
-    // Smooth map pan (only if moved > ~10m)
-    const moved = marker
-      ? haversine(marker.getLatLng().lat, marker.getLatLng().lng, latitude, longitude) > 10
-      : true;
-
-    if (moved) {
-      marker.setLatLng([latitude, longitude]);
-      map.panTo([latitude, longitude], { animate: true, duration: 0.8 });
+      if (map) map.invalidateSize();
     }
-
-    updateDisplay(latitude, longitude, speed, accuracy);
-    setStatus('active');
-  }
-
-  function onGpsError(err) {
-    setStatus('error', 'GPS Signal Lost');
-    console.warn('GPS error:', err.message);
-  }
-
-  // ─── UI UPDATES ─────────────────────────────────────────────────
-  function updateDisplay(lat, lng, speed, accuracy) {
-    document.getElementById('bsLat').textContent     = lat.toFixed(6);
-    document.getElementById('bsLng').textContent     = lng.toFixed(6);
-    document.getElementById('bsSpeed').textContent   = speed !== null && speed !== undefined
-      ? (speed !== null ? (speed * 3.6).toFixed(1) : '0.0') + ' km/h'
-      : '— km/h';
-    document.getElementById('bsAccuracy').textContent = accuracy !== null && accuracy !== undefined
-      ? Math.round(accuracy) + ' m'
-      : '— m';
-    document.getElementById('bsTime').textContent = new Date().toLocaleTimeString();
-  }
-
-  function setStatus(type, label) {
-    const pill = document.getElementById('statusPill');
-    const text = document.getElementById('statusText');
-    pill.className = 'status-pill ' + type;
-    if (type === 'active')  text.textContent = '🟢 Tracking Active';
-    else if (type === 'loading') text.textContent = label || 'Getting GPS…';
-    else if (type === 'error')   text.textContent = label || '❌ GPS Error';
-  }
-
-  // ─── SUPABASE PUSH ───────────────────────────────────────────────
-  async function pushLocation(lat, lng) {
-    if (!tripId) return;
-    try {
-      const { error } = await supabase
-        .from('driver_locations')
-        .upsert({
-          trip_id:    tripId,
-          latitude:   lat,
-          longitude:  lng,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'trip_id' });
-
-      if (error) {
-        console.error('Supabase upsert error:', error.message);
-        document.getElementById('bsSyncStatus').textContent = '⚠ Sync failed';
-        setStatus('error', '⚠ DB Sync Failed');
-      } else {
-        document.getElementById('bsSyncStatus').textContent = '✓ Synced to server';
-        setStatus('active');
-      }
-    } catch (e) {
-      console.error('Network error:', e);
-      document.getElementById('bsSyncStatus').textContent = '⚠ Offline';
-    }
-  }
-
-  // ─── HELPERS ─────────────────────────────────────────────────────
-  // Haversine distance in metres between two lat/lng points
-  function haversine(lat1, lon1, lat2, lon2) {
-    const R = 6371000;
-    const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180;
-    const Δφ = (lat2 - lat1) * Math.PI / 180;
-    const Δλ = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(Δφ/2)**2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  }
-
-  // Cleanup on page hide (tab switch / app suspend)
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-      clearInterval(pingTimer);
-    } else if (map) {
-      // Re-start tracking when driver comes back
-      watchId = navigator.geolocation.watchPosition(onPosition, onGpsError,
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 });
-      pingTimer = setInterval(() => {
-        if (lastLat !== null) pushLocation(lastLat, lastLng);
-      }, PING_INTERVAL_MS);
-    }
-  });
-</script>
+  </script>
 </body>
 </html>
