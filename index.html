@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chennai City Rides | Premium Cab Brokerage</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #004C22;
+      --secondary: #22C55E;
+      --accent: #F97316;
+      --bg: #F8FAF9;
+      --text: #111827;
+      --surface: #FFFFFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+    /* --- Hero Section --- */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #004C22 0%, #166534 100%); color: white; text-align: center;
+      padding: 40px 20px; position: relative; overflow: hidden;
+    }
+    
+    .hero::before {
+      content: ""; position: absolute; top: -10%; right: -10%; width: 400px; height: 400px;
+      background: var(--secondary); opacity: 0.1; filter: blur(100px); border-radius: 50%;
+    }
+
+    .badge {
+      background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 99px;
+      font-size: 12px; font-weight: 700; border: 1px solid rgba(255,255,255,0.2);
+      margin-bottom: 24px; text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    h1 { font-family: 'Manrope', sans-serif; font-size: clamp(32px, 8vw, 64px); font-weight: 800; line-height: 1.1; margin-bottom: 20px; }
+    p { font-size: 18px; opacity: 0.8; max-width: 600px; line-height: 1.6; margin-bottom: 40px; }
+
+    /* --- Buttons --- */
+    .btn-group { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+    .btn {
+      padding: 18px 32px; border-radius: 16px; font-weight: 700; font-size: 16px;
+      text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;
+      display: inline-flex; align-items: center; gap: 10px;
+    }
+    .btn:active { transform: scale(0.96); }
+
+    .btn-primary { background: var(--surface); color: var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    .btn-outline { border: 2px solid rgba(255,255,255,0.3); color: white; }
+    .btn-outline:hover { background: rgba(255,255,255,0.1); }
+
+    /* --- App Preview --- */
+    .preview { margin-top: 60px; max-width: 800px; width: 100%; border-radius: 24px; box-shadow: 0 40px 100px rgba(0,0,0,0.5); border: 8px solid rgba(255,255,255,0.05); }
+
+    /* --- Footer --- */
+    footer { padding: 40px; text-align: center; font-size: 14px; opacity: 0.5; color: white; }
+  </style>
+</head>
+<body>
+
+  <section class="hero">
+    <div class="badge">Chennai's #1 Cab Brokerage</div>
+    <h1>Premium Rides,<br>Real-Time Tracking.</h1>
+    <p>The ultimate platform for seamless ride bookings and precision driver management. Professional, Fast, Reliable.</p>
+    
+    <div class="btn-group">
+      <!-- ✅ Goes directly to your Driver Tracker -->
+      <a href="driver_tracker/index.html" class="btn btn-primary">
+        <span>Driver Portal</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      </a>
+      
+      <!-- Link to your APK (if you uploaded it to a folder) -->
+      <a href="#" class="btn btn-outline">
+        <span>Download Customer App</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </a>
+    </div>
+
+    <footer>
+      &copy; 2026 Chennai City Rides. All rights reserved.
+    </footer>
+  </section>
+
+</body>
+</html>
