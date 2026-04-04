@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,35 +9,45 @@ class PushNotificationService {
       FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize() async {
-    // Request permissions (especially for Android 13+)
-    await _fcm.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    try {
+      // 1. Request permissions (especially for Android 13+)
+      // Using a timeout to ensure this doesn't hang the background thread indefinitely.
+      // We don't return a manual object to avoid version-specific compile errors.
+      await _fcm.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      ).timeout(const Duration(seconds: 8));
 
-    // Initialize local notifications for foreground display
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const initSettings = InitializationSettings(android: androidSettings);
-    await _localNotifications.initialize(initSettings);
+      // 2. Initialize local notifications
+      const androidSettings =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const initSettings = InitializationSettings(android: androidSettings);
+      await _localNotifications.initialize(initSettings);
 
-    // Listen for foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        _showForegroundNotification(message.notification!);
-      }
-    });
+      // 3. Setup Listeners
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        if (message.notification != null) {
+          _showForegroundNotification(message.notification!);
+        }
+      });
 
-    // Handle token refresh
-    _fcm.onTokenRefresh.listen((token) {
-      _saveTokenToDatabase(token);
-    });
+      _fcm.onTokenRefresh.listen((token) {
+        _saveTokenToDatabase(token);
+      });
 
-    // Initial token save
-    final token = await _fcm.getToken();
-    if (token != null) {
-      await _saveTokenToDatabase(token);
+      // 4. Initial token retrieval (Parallel / Non-blocking)
+      _fcm.getToken().then((token) {
+        if (token != null) {
+          _saveTokenToDatabase(token);
+        }
+      }).catchError((e) {
+        debugPrint("FCM Token Error: $e");
+        return null;
+      });
+
+    } catch (e) {
+      debugPrint("Notification Service initialization skipped or timed out: $e");
     }
   }
 
@@ -52,7 +62,7 @@ class PushNotificationService {
         'updated_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {
-      print('Error saving FCM token: $e');
+      debugPrint('Error saving FCM token: $e');
     }
   }
 

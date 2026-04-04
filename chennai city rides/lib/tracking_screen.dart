@@ -28,6 +28,7 @@ class TrackingScreen extends StatefulWidget {
 class _TrackingScreenState extends State<TrackingScreen> {
   final _client = Supabase.instance.client;
   final MapController _mapController = MapController();
+  LatLng? _lastAnimatedPosition;
 
   double? _readCoordinate(dynamic value) {
     if (value is num) {
@@ -123,7 +124,15 @@ class _TrackingScreenState extends State<TrackingScreen> {
 
             if (hasLiveLocation) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                _mapController.move(currentPosition, 15.0);
+                // Smooth glide only if the movement is significant (> 5 meters approx)
+                // This prevents 'camera jitter' and makes it feel premium.
+                if (_lastAnimatedPosition == null || 
+                    (currentPosition.latitude - _lastAnimatedPosition!.latitude).abs() > 0.0001 ||
+                    (currentPosition.longitude - _lastAnimatedPosition!.longitude).abs() > 0.0001) {
+                  
+                  _mapController.move(currentPosition, 15.0);
+                  _lastAnimatedPosition = currentPosition;
+                }
               });
             }
 
