@@ -331,7 +331,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
     final vehicle = _displayValue(trip['vehicle_type'], 'Vehicle pending');
     final pickup = _displayValue(trip['pickup_location'], 'Pickup pending');
     final dropoff = _displayValue(trip['dropoff_location'], 'Dropoff pending');
-    final quotedPrice = _displayValue(trip['quoted_price'], 'Pending');
+    final price = _displayValue(trip['price'], 'Pending');
 
     return Container(
       width: double.infinity,
@@ -431,8 +431,8 @@ class _TrackingScreenState extends State<TrackingScreen> {
           _buildInfoRow('Driver phone', driverPhone),
           const SizedBox(height: 10),
           _buildInfoRow(
-            'Quoted price',
-            quotedPrice == 'Pending' ? quotedPrice : 'INR $quotedPrice',
+            'Trip price',
+            price == 'Pending' ? price : 'INR $price',
           ),
           const SizedBox(height: 10),
           _buildInfoRow('Last update', _lastUpdated(location)),

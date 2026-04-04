@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "926418186845",
+    "project_id": "chennai-city-rides-admin",
+    "storage_bucket": "chennai-city-rides-admin.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:926418186845:android:45e9bbb5dcff516a3dd3b4",
+        "android_client_info": {
+          "package_name": "com.chennaicityrides.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDV6NJPasNJHTEQ-9CXg2AVoSRT5LiDq5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

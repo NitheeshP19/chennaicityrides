@@ -11,3 +11,12 @@ client_secret*.json
 .packages
 .pub-cache/
 .pub/
+
+# Sensitive Keys
+*.json
+!google-services.json
+chennai-city-rides-admin-firebase-adminsdk-*.json
+client_secret_*.json
+
+# Supabase CLI
+supabase/.temp/

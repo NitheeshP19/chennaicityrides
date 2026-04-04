@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { create, getNumericDate } from "https://deno.land/x/djwt@v2.2/mod.ts";
 
 serve(async (req) => {
   try {
@@ -17,7 +18,8 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { error } = await supabase
+    // 1. Update the trip request
+    const { data: tripData, error: updateError } = await supabase
       .from("trip_requests")
       .update({
         driver_name,
@@ -27,14 +29,111 @@ serve(async (req) => {
         status: "pending_payment",
         quoted_at: new Date().toISOString(),
       })
-      .eq("id", trip_id);
+      .eq("id", trip_id)
+      .select("user_id")
+      .single();
 
-    if (error) {
-      return new Response(JSON.stringify({ error }), { status: 400 });
+    if (updateError || !tripData) {
+      return new Response(JSON.stringify({ error: updateError }), {
+        status: 400,
+      });
+    }
+
+    // 2. Fetch the user's FCM token
+    const { data: tokenData } = await supabase
+      .from("user_fcm_tokens")
+      .select("fcm_token")
+      .eq("user_id", tripData.user_id)
+      .single();
+
+    // 3. Send the push notification via FCM V1 API
+    if (tokenData?.fcm_token) {
+      const serviceAccount = JSON.parse(Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!);
+      
+      // Fix: PEM to DER conversion for the JWT library
+      const pemContent = serviceAccount.private_key
+        .replace(/\\n/g, "\n")
+        .replace("-----BEGIN PRIVATE KEY-----", "")
+        .replace("-----END PRIVATE KEY-----", "")
+        .trim();
+      const binaryString = atob(pemContent.replace(/\s/g, ""));
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      const key = await crypto.subtle.importKey(
+        "pkcs8",
+        bytes.buffer,
+        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+
+      const jwt = await create(
+        { alg: "RS256", typ: "JWT" },
+        {
+          iss: serviceAccount.client_email,
+          sub: serviceAccount.client_email,
+          aud: "https://oauth2.googleapis.com/token",
+          iat: getNumericDate(0),
+          exp: getNumericDate(3600),
+          scope: "https://www.googleapis.com/auth/firebase.messaging",
+        },
+        key
+      );
+
+      const response = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+          assertion: jwt,
+        }),
+      });
+
+      const tokenJson = await response.json();
+      const access_token = tokenJson.access_token;
+
+      if (access_token) {
+        await fetch(
+          `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${access_token}`,
+            },
+            body: JSON.stringify({
+              message: {
+                token: tokenData.fcm_token,
+                notification: {
+                  title: "Ride Allotted! 🚕",
+                  body: `Quote received for your ride. Trip Price: INR ${price}`,
+                },
+                data: {
+                  type: "allotment",
+                  trip_id: trip_id,
+                },
+                android: {
+                  priority: "high",
+                  notification: {
+                    sound: "default",
+                    channel_id: "trip_updates",
+                  },
+                },
+              },
+            }),
+          }
+        );
+      }
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: "Trip allotted successfully" }),
+      JSON.stringify({
+        success: true,
+        message: "Trip allotted and V1 notification sent.",
+      }),
       { status: 200 }
     );
   } catch (err: any) {
