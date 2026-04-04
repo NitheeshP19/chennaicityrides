@@ -195,18 +195,16 @@
 
     let map = null, marker = null;
 
-    // Initialize Supabase on load to ensure the CDN script has fully parsed
-    window.addEventListener('load', () => {
-      try {
-        if (window.supabase) {
-          supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        } else {
-          alert('Error: Supabase library failed to load. Please check your internet connection and refresh.');
-        }
-      } catch(e) {
-        alert('Supabase setup error: ' + e.message);
+    // Initialize Supabase immediately (since the script tag is synchronous)
+    try {
+      if (window.supabase) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      } else {
+        console.error('Supabase library failed to load.');
       }
-    });
+    } catch(e) {
+      console.error('Supabase setup error: ' + e.message);
+    }
 
     // --- 2. START TRACKING LOGIC ---
     function handleStart() {
@@ -231,53 +229,65 @@
           return;
         }
 
-        navigator.geolocation.watchPosition(
-          async (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
+        const geoOptions = { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 };
 
-            // Switch screen if first time
-            if (document.getElementById('mapScreen').classList.contains('hidden')) {
-              document.getElementById('permScreen').classList.add('hidden');
-              document.getElementById('mapScreen').classList.remove('hidden');
-              initMap(lat, lng);
-            }
+        const onLocationSuccess = async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
 
-            updateLiveUI(lat, lng);
+          // Switch screen if first time
+          if (document.getElementById('mapScreen').classList.contains('hidden')) {
+            document.getElementById('permScreen').classList.add('hidden');
+            document.getElementById('mapScreen').classList.remove('hidden');
+            initMap(lat, lng);
+          }
 
-            // ✅ UPLOAD TO DB (Exact format required)
-            const { error } = await supabase
-              .from("driver_locations")
-              .upsert({
-                trip_id: tripId,
-                latitude: lat,
-                longitude: lng,
-                updated_at: new Date().toISOString()
-              });
+          updateLiveUI(lat, lng);
 
-            if (error) {
-              console.error("Supabase Error:", error);
-              document.getElementById('syncStatus').innerText = "⚠ Sync Error: " + error.message;
-              document.getElementById('statusPill').classList.remove('active');
-            } else {
-              document.getElementById('syncStatus').innerText = "✓ Live Synced to Cloud";
-              document.getElementById('syncTime').innerText = new Date().toLocaleTimeString();
-              document.getElementById('statusPill').classList.add('active');
-              document.getElementById('statusLabel').innerText = "Tracking Active";
-            }
+          // UPLOAD TO DB
+          const { error } = await supabase
+            .from("driver_locations")
+            .upsert({
+              trip_id: tripId,
+              latitude: lat,
+              longitude: lng,
+              updated_at: new Date().toISOString()
+            });
+
+          if (error) {
+            console.error("Supabase Error:", error);
+            document.getElementById('syncStatus').innerText = "⚠ Sync Error: " + error.message;
+            document.getElementById('statusPill').classList.remove('active');
+          } else {
+            document.getElementById('syncStatus').innerText = "✓ Live Synced to Cloud";
+            document.getElementById('syncTime').innerText = new Date().toLocaleTimeString();
+            document.getElementById('statusPill').classList.add('active');
+            document.getElementById('statusLabel').innerText = "Tracking Active";
+          }
+        };
+
+        const onLocationError = (err) => {
+          btnText.innerText = "Start Tracking Session";
+          btn.style.opacity = "1";
+          btn.disabled = false;
+          let msg = "GPS Error. ";
+          if (err.code === 1) msg += "Permission Denied. Please allow location access in your browser settings.";
+          else if (err.code === 2) msg += "Position Unavailable. Check your GPS signal.";
+          else if (err.code === 3) msg += "Request timed out. Trying to get a fix failed. Ensure Location Services are turned ON.";
+          alert(msg);
+        };
+
+        // Get initial position quickly to pass the barrier
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            onLocationSuccess(pos);
+            // Then continuously watch
+            navigator.geolocation.watchPosition(onLocationSuccess, onLocationError, geoOptions);
           },
-          (err) => {
-            btnText.innerText = "Start Tracking Session";
-            btn.style.opacity = "1";
-            btn.disabled = false;
-            let msg = "GPS Error. ";
-            if (err.code === 1) msg += "Permission Denied. Please allow location access.";
-            else if (err.code === 2) msg += "Position Unavailable. Check your GPS signal.";
-            else if (err.code === 3) msg += "Request timed out. Trying to get a fix over 30s failed.";
-            alert(msg);
-          },
-          { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }
+          onLocationError,
+          geoOptions
         );
+
       } catch (e) {
         alert("Unexpected error starting tracking: " + e.message);
       }
