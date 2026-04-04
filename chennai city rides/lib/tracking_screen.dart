@@ -63,11 +63,18 @@ class _TrackingScreenState extends State<TrackingScreen> {
   }
 
   String _waitingMessage(Map<String, dynamic> trip) {
+    final status = _displayValue(trip['status'], 'New').toLowerCase();
+    
+    if (status == 'approved') {
+      return 'Quote accepted! Waiting for your driver to start the live GPS signal.';
+    }
+    
     final hasDriver = _displayValue(trip['driver_name'], '').isNotEmpty;
     if (hasDriver) {
-      return 'Driver allotted. Ask the driver to open the tracker link so live GPS updates can begin.';
+      return 'Driver allotted. Live tracking will begin once the journey starts.';
     }
-    return 'Your request is in the admin queue. A driver will be allotted shortly.';
+    
+    return 'Your request is in the admin queue. A premium vehicle will be allotted shortly.';
   }
 
   String _lastUpdated(Map<String, dynamic>? location) {

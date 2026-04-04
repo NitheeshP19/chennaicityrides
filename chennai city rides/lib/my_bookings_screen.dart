@@ -150,6 +150,18 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
     }
   }
 
+  String _getStatusMessage(Map<String, dynamic> trip) {
+    final status = _display(trip['status'], 'New').toLowerCase();
+    if (status == 'approved') {
+      return 'Quote accepted! Waiting for the driver to start the live GPS signal.';
+    }
+    final hasDriver = _display(trip['driver_name'], '').isNotEmpty;
+    if (hasDriver) {
+      return 'Driver allotted. Live tracking will begin once the driver starts the journey.';
+    }
+    return 'Your request is in the admin queue. A driver will be allotted shortly.';
+  }
+
   IconData _statusIcon(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -383,7 +395,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
     final price = _display(trip['price'], '');
     final createdAt = _formatDate(trip['created_at']?.toString());
     final startDate = _formatDate(trip['start_date']?.toString());
-    final isActive = ['assigned', 'in_progress'].contains(status.toLowerCase());
+    final isActive = ['approved', 'assigned', 'in_progress'].contains(status.toLowerCase());
     final isPendingPayment = status.toLowerCase() == 'pending_payment';
 
     return Container(
