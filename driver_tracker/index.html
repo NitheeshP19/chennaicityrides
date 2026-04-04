@@ -239,10 +239,16 @@
           }
         },
         (err) => {
-          alert("GPS Permission Denied. Please enable location in browser settings and refresh.");
-          window.location.reload();
+          btnText.innerText = "Start Tracking Session";
+          btn.style.opacity = "1";
+          btn.disabled = false;
+          let msg = "GPS Error. ";
+          if (err.code === 1) msg += "Permission Denied. Please allow location access.";
+          else if (err.code === 2) msg += "Position Unavailable. Check your GPS signal.";
+          else if (err.code === 3) msg += "Request timed out.";
+          alert(msg);
         },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }
       );
     }
 
