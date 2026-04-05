@@ -159,9 +159,18 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
+    // Visual Error display
+    function showError(msg) {
+      const p = document.getElementById('permScreen');
+      const errBox = document.createElement('div');
+      errBox.style = "background: red; color: white; padding: 15px; margin: 20px; border-radius: 10px; font-weight: bold; position: absolute; top: 10px; left: 10px; right: 10px; z-index: 9999;";
+      errBox.innerText = msg;
+      document.body.appendChild(errBox);
+    }
+
     // Global Error Catcher for Debugging
     window.onerror = function(msg, url, line) {
-      alert("System Error: " + msg + " at line " + line);
+      showError("System Error: " + msg + " at line " + line);
     };
 
     // 1. CONFIGURATION
@@ -176,24 +185,34 @@
     document.addEventListener("DOMContentLoaded", () => {
       // Check if Supabase successfully loaded from unpkg
       if (!window.supabase) {
-        alert("Critical failure: The Supabase library failed to load from the internet. Please check your connection.");
+        showError("Critical failure: The Supabase library failed to load from the internet.");
         return;
       }
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      try {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      } catch (e) {
+        showError("Supabase init failed: " + e.message);
+      }
 
       const params = new URLSearchParams(window.location.search);
       tripId = params.get("trip_id");
       console.log("Trip ID:", tripId);
+      
+      // Auto-bind button after DOM is ready
+      const btn = document.querySelector('button.btn');
+      if(btn) {
+          btn.onclick = startTracking;
+      }
     });
 
     function startTracking() {
       if (!tripId) {
-        alert("Trip ID missing from URL");
+        showError("Trip ID missing from URL");
         return;
       }
 
       if (!navigator.geolocation) {
-        alert("Geolocation not supported by this browser");
+        showError("Geolocation not supported by this browser");
         return;
       }
 
@@ -205,13 +224,10 @@
         async (position) => {
           const latitude = position.coords.latitude;
           const longitude = position.coords.longitude;
-
           console.log("Sending GPS:", latitude, longitude);
           
-          // Update UI
           updateUI(latitude, longitude);
 
-          // CORE INSERT LOGIC (Exact match for user's request)
           const { error } = await supabase
             .from("driver_locations")
             .upsert({
@@ -223,7 +239,7 @@
 
           if (error) {
             console.error("Insert failed:", error.message);
-            document.getElementById('syncStatus').innerText = "❌ Sync Error";
+            document.getElementById('syncStatus').innerText = "❌ Sync Error: " + error.message;
           } else {
             console.log("Inserted successfully ✅");
             document.getElementById('syncStatus').innerText = "✅ Live Synced";
@@ -232,7 +248,7 @@
         },
         (error) => {
           console.error("GPS Error:", error.message);
-          alert("Location permission denied or GPS signal lost");
+          showError("GPS Error: " + error.message);
         },
         {
           enableHighAccuracy: true,
