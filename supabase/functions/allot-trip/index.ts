@@ -7,22 +7,35 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+serve(async (req: any) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { 
+      headers: {
+        ...corsHeaders,
+        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, PUT, DELETE',
+        'Access-Control-Allow-Headers': '*'
+      } 
+    });
   }
 
   try {
-    const reqBody = await req.text();
-    if (!reqBody) {
+    const defaultHeaders = {
+      ...corsHeaders,
+      'Access-Control-Allow-Origin': '*',
+      "Content-Type": "application/json"
+    };
+
+    let reqBodyStr = await req.text();
+    if (!reqBodyStr) {
         return new Response(JSON.stringify({ error: "Empty request body" }), {
             status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
+            headers: defaultHeaders
         });
     }
     
-    const { trip_id, driver_name, driver_phone, vehicle_type, price } = JSON.parse(reqBody);
+    // Parse the JSON reliably
+    const { trip_id, driver_name, driver_phone, vehicle_type, price } = JSON.parse(reqBodyStr);
 
     if (!trip_id) {
       return new Response(JSON.stringify({ error: "Missing trip_id" }), {

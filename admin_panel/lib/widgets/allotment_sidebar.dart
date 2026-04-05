@@ -106,12 +106,13 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
         ),
       );
       widget.onClosed();
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to allot the trip right now.'),
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 8),
         ),
       );
     } finally {
