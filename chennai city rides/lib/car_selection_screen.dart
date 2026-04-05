@@ -55,28 +55,70 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
 
   final List<VehicleOption> vehicles = const [
     VehicleOption(
-      name: 'Car',
-      description: 'Premium comfort for 4',
-      icon: Icons.directions_car_rounded,
+      name: '4+1  Car AC',
+      description: 'Premium AC comfort for small groups',
+      icon: Icons.directions_car_filled,
       capacity: 4,
     ),
     VehicleOption(
-      name: 'SUV',
-      description: 'Spacious travel for 6',
-      icon: Icons.local_taxi_rounded,
-      capacity: 6,
+      name: '7+1 SUV Car AC',
+      description: 'Spacious AC SUV travel for families',
+      icon: Icons.car_rental_rounded,
+      capacity: 7,
     ),
     VehicleOption(
-      name: '12-Seater',
-      description: 'Executive group van',
+      name: '12+1 Tempo Traveller AC',
+      description: 'Luxury AC executive group van',
       icon: Icons.airport_shuttle_rounded,
       capacity: 12,
     ),
     VehicleOption(
-      name: '24-Seater',
-      description: 'Corporate shuttle',
+      name: '14+1 Tempo Traveller AC',
+      description: 'Extended luxury AC group van',
+      icon: Icons.airport_shuttle_rounded,
+      capacity: 14,
+    ),
+    VehicleOption(
+      name: '18+1 Tempo Traveller AC',
+      description: 'Large premium AC group van',
+      icon: Icons.airport_shuttle_rounded,
+      capacity: 18,
+    ),
+    VehicleOption(
+      name: '16+1 Tourister Van NON AC',
+      description: 'Comfortable non-AC travel',
       icon: Icons.directions_bus_rounded,
-      capacity: 24,
+      capacity: 16,
+    ),
+    VehicleOption(
+      name: '21+1 Coach Van AC & NON AC',
+      description: 'Spacious coach for group journeys',
+      icon: Icons.directions_bus_filled,
+      capacity: 21,
+    ),
+    VehicleOption(
+      name: '25+1 Coach Van AC & NON AC',
+      description: 'Extended coach for large groups',
+      icon: Icons.directions_bus_filled,
+      capacity: 25,
+    ),
+    VehicleOption(
+      name: '30+1 AC minibus',
+      description: 'Premium AC mid-sized bus',
+      icon: Icons.directions_transit_rounded,
+      capacity: 30,
+    ),
+    VehicleOption(
+      name: '40+1 AC minibus',
+      description: 'Large premium AC mid-sized bus',
+      icon: Icons.directions_transit_rounded,
+      capacity: 40,
+    ),
+    VehicleOption(
+      name: '54+1 AC bus',
+      description: 'Luxury full-sized AC coach',
+      icon: Icons.directions_transit_rounded,
+      capacity: 54,
     ),
   ];
 
@@ -815,6 +857,7 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
   Widget _buildVehicleCard(int index) {
     final vehicle = vehicles[index];
     final isSelected = _selectedVehicleIndex == index;
+    final isAC = vehicle.name.contains('AC') && !vehicle.name.contains('NON AC');
 
     return GestureDetector(
       onTap: () => setState(() {
@@ -824,99 +867,158 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
         }
       }),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.all(18),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.surfaceContainerLowest
-              : AppColors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(20),
+          color: isSelected ? const Color(0xFF191C1D) : AppColors.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isSelected
-                ? AppColors.primaryContainer.withValues(alpha: 0.3)
-                : AppColors.outlineVariant.withValues(alpha: 0.15),
-            width: isSelected ? 1.5 : 1,
+                ? const Color(0xFF191C1D)
+                : AppColors.outlineVariant.withValues(alpha: 0.2),
+            width: 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.primaryContainer.withValues(alpha: 0.1),
-                    blurRadius: 32,
+                    color: const Color(0xFF191C1D).withValues(alpha: 0.2),
+                    blurRadius: 24,
                     offset: const Offset(0, 12),
                   ),
                 ]
-              : [],
+              : [
+                  BoxShadow(
+                    color: AppColors.onSurface.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
         ),
         child: Row(
           children: [
             AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              width: 56,
-              height: 56,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              width: 58,
+              height: 58,
               decoration: BoxDecoration(
-                gradient: isSelected
-                    ? const LinearGradient(
-                        colors: [AppColors.primaryContainer, AppColors.primary],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                color: isSelected ? null : AppColors.surfaceContainerHigh,
+                color: isSelected ? Colors.white : AppColors.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(16),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : [],
               ),
               child: Icon(
                 vehicle.icon,
-                color: isSelected
-                    ? AppColors.onPrimary
-                    : AppColors.onSurfaceVariant,
-                size: 26,
+                color: isSelected ? const Color(0xFF191C1D) : AppColors.onSurfaceVariant,
+                size: 28,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 18),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     vehicle.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Manrope',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.onSurface,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: isSelected ? Colors.white : AppColors.onSurface,
                       letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     vehicle.description,
                     style: TextStyle(
                       fontFamily: 'Plus Jakarta Sans',
                       fontSize: 13,
-                      color: AppColors.onSurfaceVariant.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w500,
+                      color: isSelected
+                          ? Colors.white.withValues(alpha: 0.7)
+                          : AppColors.onSurfaceVariant.withValues(alpha: 0.7),
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : AppColors.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.people_alt_rounded,
+                              size: 14,
+                              color: isSelected
+                                  ? Colors.white
+                                  : AppColors.onSurfaceVariant.withValues(alpha: 0.8),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${vehicle.capacity} seats',
+                              style: TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: isSelected
+                                    ? Colors.white
+                                    : AppColors.onSurfaceVariant.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isAC) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFFE8F5E9).withValues(alpha: 0.15)
+                                : const Color(0xFFE8F5E9),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.ac_unit_rounded,
+                                size: 14,
+                                color: isSelected ? const Color(0xFFA5D6A7) : const Color(0xFF2E7D32),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'A/C',
+                                style: TextStyle(
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: isSelected ? const Color(0xFFA5D6A7) : const Color(0xFF2E7D32),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primaryContainer.withValues(alpha: 0.1)
-                    : AppColors.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                '${vehicle.capacity} seats',
-                style: TextStyle(
-                  fontFamily: 'Plus Jakarta Sans',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: isSelected
-                      ? AppColors.primaryContainer
-                      : AppColors.onSurfaceVariant.withValues(alpha: 0.6),
-                ),
               ),
             ),
           ],

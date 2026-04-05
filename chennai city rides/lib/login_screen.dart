@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'terms_screen.dart';
+import 'privacy_screen.dart';
 
 // Design System Tokens: "The Heritage Modernist"
 class _Colors {
@@ -30,6 +33,7 @@ class _LoginScreenState extends State<LoginScreen>
   );
 
   bool _isLoading = false;
+  bool _isTermsAccepted = false;
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -68,6 +72,11 @@ class _LoginScreenState extends State<LoginScreen>
 
   Future<void> _signInWithGoogle() async {
     if (_isLoading) return;
+
+    if (!_isTermsAccepted) {
+      _showSnackBar('Please accept Terms & Conditions to continue');
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -316,19 +325,24 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildGoogleButton() {
     return GestureDetector(
       onTap: _isLoading ? null : _signInWithGoogle,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF97316),
+          color: _isTermsAccepted 
+              ? const Color(0xFFF97316) 
+              : const Color(0xFFF97316).withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(9999),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFF97316).withValues(alpha: 0.3),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          boxShadow: _isTermsAccepted 
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFFF97316).withValues(alpha: 0.3),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  ),
+                ]
+              : [],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -346,18 +360,18 @@ class _LoginScreenState extends State<LoginScreen>
               Container(
                 width: 24,
                 height: 24,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: _isTermsAccepted ? Colors.white : Colors.white.withValues(alpha: 0.6),
                   shape: BoxShape.circle,
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'G',
                     style: TextStyle(
                       fontFamily: 'Manrope',
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF4285F4),
+                      color: const Color(0xFF4285F4).withValues(alpha: _isTermsAccepted ? 1.0 : 0.6),
                     ),
                   ),
                 ),
@@ -366,11 +380,11 @@ class _LoginScreenState extends State<LoginScreen>
             const SizedBox(width: 10),
             Text(
               _isLoading ? 'Opening Google...' : 'Continue with Google',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Plus Jakarta Sans',
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: Colors.white.withValues(alpha: _isTermsAccepted ? 1.0 : 0.7),
                 letterSpacing: 0.3,
               ),
             ),
@@ -381,35 +395,76 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildTerms() {
-    return Center(
-      child: Text.rich(
-        TextSpan(
-          text: 'By continuing, you agree to our ',
-          style: TextStyle(
-            fontFamily: 'Plus Jakarta Sans',
-            fontSize: 12,
-            color: _Colors.onSurfaceVariant.withValues(alpha: 0.5),
-          ),
-          children: const [
-            TextSpan(
-              text: 'Terms',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: _Colors.primaryContainer,
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: 24,
+              width: 24,
+              child: Checkbox(
+                value: _isTermsAccepted,
+                onChanged: (val) => setState(() => _isTermsAccepted = val ?? false),
+                activeColor: _Colors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                side: BorderSide(
+                  color: _Colors.onSurfaceVariant.withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
               ),
             ),
-            TextSpan(text: ' & '),
-            TextSpan(
-              text: 'Privacy Policy',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: _Colors.primaryContainer,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text.rich(
+                TextSpan(
+                  text: 'I agree to the ',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 13,
+                    color: _Colors.onSurfaceVariant.withValues(alpha: 0.8),
+                  ),
+                  children: [
+                    TextSpan(
+                      text: 'Terms & Conditions',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: _Colors.primaryContainer,
+                        decoration: TextDecoration.underline,
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const TermsScreen()),
+                          );
+                        },
+                    ),
+                    const TextSpan(text: ' and '),
+                    TextSpan(
+                      text: 'Privacy Policy',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: _Colors.primaryContainer,
+                        decoration: TextDecoration.underline,
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+                          );
+                        },
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
-        textAlign: TextAlign.center,
-      ),
+      ],
     );
   }
 }

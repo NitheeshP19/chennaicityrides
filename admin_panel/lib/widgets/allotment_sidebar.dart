@@ -20,15 +20,32 @@ class AllotmentSidebar extends StatefulWidget {
 }
 
 class _AllotmentSidebarState extends State<AllotmentSidebar> {
-  final _driverNameController = TextEditingController();
-  final _driverPhoneController = TextEditingController();
-  final _priceController = TextEditingController();
-  String _selectedVehicle = 'Car';
+  static const List<String> _vehicleFleet = [
+    '4+1  Car AC',
+    '7+1 SUV Car AC',
+    '12+1 Tempo Traveller AC',
+    '14+1 Tempo Traveller AC',
+    '18+1 Tempo Traveller AC',
+    '16+1 Tourister Van NON AC',
+    '21+1 Coach Van AC & NON AC',
+    '25+1 Coach Van AC & NON AC',
+    '30+1 AC minibus',
+    '40+1 AC minibus',
+    '54+1 AC bus',
+  ];
+
+  late final TextEditingController _driverNameController;
+  late final TextEditingController _driverPhoneController;
+  late final TextEditingController _priceController;
+  String _selectedVehicle = _vehicleFleet[0];
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _driverNameController = TextEditingController();
+    _driverPhoneController = TextEditingController();
+    _priceController = TextEditingController();
     _syncControllers();
   }
 
@@ -55,7 +72,14 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
         widget.tripData['driver_phone']?.toString() ?? '';
     _priceController.text =
         widget.tripData['price']?.toString() ?? '';
-    _selectedVehicle = widget.tripData['vehicle_type']?.toString() ?? 'Car';
+
+    // Handle legacy vehicle types by validating against current fleet
+    final dbVehicle = widget.tripData['vehicle_type']?.toString();
+    if (dbVehicle != null && _vehicleFleet.contains(dbVehicle)) {
+      _selectedVehicle = dbVehicle;
+    } else {
+      _selectedVehicle = _vehicleFleet[0]; // Fallback for legacy trips ("Car", "SUV", etc.)
+    }
   }
 
   String _displayValue(dynamic value, String fallback) {
@@ -155,98 +179,107 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
             child: ListView(
               padding: const EdgeInsets.all(24),
               children: [
-                _buildInfoRow(
-                  'Pickup',
-                  _displayValue(widget.tripData['pickup_location'], 'N/A'),
-                ),
-                const SizedBox(height: 12),
-                _buildInfoRow(
-                  'Dropoff',
-                  _displayValue(widget.tripData['dropoff_location'], 'N/A'),
-                ),
-                const SizedBox(height: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Vehicle',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 4),
-                    isAllotted
-                        ? Text(
-                            _selectedVehicle,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          )
-                        : DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: _selectedVehicle,
-                              isExpanded: true,
-                              items:
-                                  ['Car', 'SUV', '12-Seater', '24-Seater']
-                                      .map(
-                                        (v) => DropdownMenuItem(
-                                          value: v,
-                                          child: Text(v),
-                                        ),
-                                      )
-                                      .toList(),
-                              onChanged: (val) {
-                                if (val != null) {
-                                  setState(() => _selectedVehicle = val);
-                                }
-                              },
-                            ),
-                          ),
+                _buildSectionCard(
+                  'Trip Route',
+                  Icons.route_outlined,
+                  [
+                    _buildInfoRow('Pickup', _displayValue(widget.tripData['pickup_location'], 'N/A'), icon: Icons.circle),
+                    const SizedBox(height: 16),
+                    _buildInfoRow('Dropoff', _displayValue(widget.tripData['dropoff_location'], 'N/A'), icon: Icons.location_on),
                   ],
                 ),
-                const SizedBox(height: 12),
-                _buildInfoRow(
-                  'Start Date',
-                  _displayValue(widget.tripData['start_date'], 'N/A'),
+                const SizedBox(height: 24),
+                _buildSectionCard(
+                  'Customer Details',
+                  Icons.person_outline,
+                  [
+                    Row(
+                      children: [
+                        Expanded(child: _buildInfoRow('Name', _displayValue(widget.tripData['customer_name'], 'Not provided'))),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildInfoRow('Phone', _displayValue(widget.tripData['customer_phone'], 'Not provided'))),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(child: _buildInfoRow('Date', _displayValue(widget.tripData['start_date'], 'N/A'))),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildInfoRow('Passengers', _displayValue(widget.tripData['passenger_count'], 'N/A'))),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                _buildInfoRow(
-                  'Customer',
-                  _displayValue(widget.tripData['customer_name'], 'Not provided'),
-                ),
-                const SizedBox(height: 12),
-                _buildInfoRow(
-                  'Phone',
-                  _displayValue(widget.tripData['customer_phone'], 'Not provided'),
-                ),
-                const SizedBox(height: 12),
-                _buildInfoRow(
-                  'Passengers',
-                  _displayValue(widget.tripData['passenger_count'], 'N/A'),
-                ),
-                const Divider(height: 48),
-                Text(
-                  'Driver Details',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _driverNameController,
-                  enabled: !isAllotted,
-                  decoration: const InputDecoration(labelText: 'Driver Name'),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _driverPhoneController,
-                  enabled: !isAllotted,
-                  decoration: const InputDecoration(labelText: 'Driver Phone'),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _priceController,
-                  enabled: !isAllotted,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Trip Price (INR)',
-                  ),
+                const SizedBox(height: 24),
+                _buildSectionCard(
+                  'Vehicle Allotment',
+                  Icons.assignment_ind_outlined,
+                  [
+                    const Text(
+                      'Select Vehicle',
+                      style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: EmeraldOrbitTheme.surfaceGray,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: isAllotted
+                          ? Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Text(_selectedVehicle, style: const TextStyle(fontWeight: FontWeight.w600)),
+                            )
+                          : DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _selectedVehicle,
+                                isExpanded: true,
+                                items: _vehicleFleet
+                                    .map(
+                                      (v) => DropdownMenuItem(
+                                        value: v,
+                                        child: Text(v),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    setState(() => _selectedVehicle = val);
+                                  }
+                                },
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _driverNameController,
+                      enabled: !isAllotted,
+                      decoration: const InputDecoration(
+                        labelText: 'Driver Name',
+                        prefixIcon: Icon(Icons.badge_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _driverPhoneController,
+                      enabled: !isAllotted,
+                      decoration: const InputDecoration(
+                        labelText: 'Driver Phone',
+                        prefixIcon: Icon(Icons.phone_android_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _priceController,
+                      enabled: !isAllotted,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Trip Price (INR)',
+                        prefixIcon: Icon(Icons.payments_outlined),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -360,14 +393,60 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(String label, String value, {IconData? icon}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 12, color: icon == Icons.circle ? EmeraldOrbitTheme.primaryGreen : EmeraldOrbitTheme.premiumOrange),
+              const SizedBox(width: 8),
+            ],
+            Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+          ],
+        ),
       ],
+    );
+  }
+
+  Widget _buildSectionCard(String title, IconData icon, List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: EmeraldOrbitTheme.surfaceGray),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: EmeraldOrbitTheme.primaryGreen),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: EmeraldOrbitTheme.primaryGreen),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1),
+          ),
+          ...children,
+        ],
+      ),
     );
   }
 }
