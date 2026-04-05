@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#004C22" />
-  <title>Live Tracking | Chennai City Rides</title>
+  <title>Driver Tracker | Chennai City Rides</title>
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -30,7 +30,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body, html { height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
 
-    /* --- Universal Screen Styles --- */
     .screen {
       position: fixed; inset: 0; display: flex; flex-direction: column;
       align-items: center; justify-content: center; z-index: 100;
@@ -38,7 +37,13 @@
     }
     .screen.hidden { opacity: 0; pointer-events: none; z-index: -1; }
 
-    /* --- UI Components --- */
+    .card {
+      background: var(--surface); border-radius: 32px; padding: 48px 32px;
+      width: 90%; max-width: 400px; text-align: center; box-shadow: 0 40px 80px rgba(0,0,0,0.3);
+      animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
     .btn {
       width: 100%; padding: 20px; background: linear-gradient(135deg, var(--primary-soft), var(--primary));
       color: white; border: none; border-radius: 20px; font-weight: 700; font-size: 16px;
@@ -47,15 +52,8 @@
     }
     .btn:active { transform: scale(0.96); box-shadow: 0 4px 12px rgba(0, 76, 34, 0.2); }
 
-    /* --- Permission Screen --- */
-    #permScreen { background: linear-gradient(160deg, var(--primary) 0%, var(--primary-soft) 100%); padding: 24px; }
-    .card {
-      background: var(--surface); border-radius: 32px; padding: 48px 32px;
-      width: 100%; max-width: 400px; text-align: center; box-shadow: 0 40px 80px rgba(0,0,0,0.3);
-      animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
+    #permScreen { background: linear-gradient(160deg, var(--primary) 0%, var(--primary-soft) 100%); }
+    
     .ring-container {
       width: 100px; height: 100px; border-radius: 50%; background: #F0FAF3;
       display: flex; align-items: center; justify-content: center; margin: 0 auto 32px;
@@ -68,10 +66,9 @@
     @keyframes ping { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(2); opacity: 0; } }
 
     h1 { font-family: 'Manrope', sans-serif; font-size: 28px; font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
-    .sub { font-size: 15px; color: var(--muted); margin-bottom: 36px; line-height: 1.6; padding: 0 10px; }
+    .sub { font-size: 15px; color: var(--muted); margin-bottom: 36px; line-height: 1.6; }
 
-    /* --- Map Screen --- */
-    #map { flex: 1; width: 100%; height: 100%; z-index: 10; }
+    #map { flex: 1; width: 100%; height: 100%; }
     
     .hud {
       position: absolute; top: 50px; left: 16px; right: 16px; z-index: 1000;
@@ -79,10 +76,9 @@
       padding: 16px 20px; border-radius: 24px; box-shadow: var(--shadow);
       display: flex; align-items: center; justify-content: space-between;
     }
-    .hud-title { font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
     .status-pill {
       display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700;
-      background: #F1F5F9; padding: 8px 14px; border-radius: 99px; transition: all 0.3s;
+      background: #F1F5F9; padding: 8px 14px; border-radius: 99px;
     }
     .status-pill.active { background: #DCFCE7; color: var(--primary); }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #94A3B8; }
@@ -94,25 +90,23 @@
       background: rgba(255, 255, 255, 0.98); padding: 24px; border-radius: 28px;
       box-shadow: var(--shadow);
     }
-    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-    .stat-box { background: #F8FAFC; padding: 16px; border-radius: 18px; display: flex; flex-direction: column; gap: 4px; }
-    .stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
-    .stat-value { font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); }
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .stat-box { background: #F8FAFC; padding: 12px; border-radius: 16px; }
+    .stat-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+    .stat-value { font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 800; display: block; }
     
     .sync-meta {
-      border-top: 1px solid #F1F5F9; padding-top: 16px; display: flex;
-      justify-content: space-between; align-items: center; font-size: 11px;
-      font-weight: 600; color: var(--muted);
+      border-top: 1px solid #F1F5F9; padding-top: 12px; display: flex;
+      justify-content: space-between; font-size: 11px; font-weight: 600; color: var(--muted);
     }
 
-    /* Driver Marker Styles */
+    /* Driver Marker */
     .driver-marker {
-      width: 60px; height: 60px; background: rgba(34, 197, 94, 0.2);
-      border: 3px solid white; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      display: flex; align-items: center; justify-content: center;
+      width: 50px; height: 50px; background: rgba(34, 197, 94, 0.2);
+      border: 3px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
     }
-    .marker-inner { width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .marker-inner svg { width: 20px; height: 20px; fill: white; }
+    .marker-inner { width: 34px; height: 34px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .marker-inner svg { width: 18px; height: 18px; fill: white; }
   </style>
 </head>
 <body>
@@ -122,13 +116,12 @@
     <div class="card">
       <div class="ring-container">
         <div class="ring-pulse"></div>
-        <span style="font-size: 40px; z-index: 2;">📍</span>
+        <span style="font-size: 40px; z-index: 2;">🚛</span>
       </div>
-      <h1>Enable Live<br>Tracking</h1>
-      <p class="sub">Your location helps the customer see your progress and prepares them for your arrival.</p>
-      <button class="btn" id="startBtn" onclick="handleStart()">
-        <span id="btnText">Start Tracking Session</span>
-        <svg id="arrowIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      <h1>Start Tracking</h1>
+      <p class="sub">Click below to begin broadcasting your location for this trip.</p>
+      <button class="btn" onclick="startTracking()">
+        Start Tracking Session
       </button>
     </div>
   </div>
@@ -136,18 +129,13 @@
   <!-- Map Screen -->
   <div id="mapScreen" class="screen hidden">
     <div class="hud">
-      <div class="hud-title">
-        <span style="background: var(--primary); color: white; padding: 4px 8px; border-radius: 8px; font-size: 10px;">RIDES</span>
-        Live GPS Signal
-      </div>
-      <div id="statusPill" class="status-pill">
+      <div style="font-weight: 800; font-size: 14px;">Chennai City Rides</div>
+      <div id="statusPill" class="status-pill active">
         <div class="dot"></div>
-        <span id="statusLabel">Awaiting...</span>
+        <span>LIVE</span>
       </div>
     </div>
-
     <div id="map"></div>
-
     <div class="tracking-sheet">
       <div class="stats-row">
         <div class="stat-box">
@@ -160,166 +148,105 @@
         </div>
       </div>
       <div class="sync-meta">
-        <span id="syncStatus">Not connected to Supabase</span>
+        <span id="syncStatus">Initializing...</span>
         <span id="syncTime">--:--:--</span>
       </div>
     </div>
   </div>
 
-  <!-- Error Screen -->
-  <div id="errorScreen" class="screen hidden" style="background: #111827; color: white;">
-    <div style="font-size: 64px; margin-bottom: 24px;">⛔</div>
-    <h1 style="color: white;">Access Denied</h1>
-    <p style="opacity: 0.6; margin-top: 12px;">The <b>trip_id</b> is missing from the URL.<br>Please use the official link provided.</p>
-  </div>
-
-  <!-- Leaflet & Supabase JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Supabase & Leaflet JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    // --- 1. CONFIGURATION ---
+    // 1. CONFIGURATION
     const SUPABASE_URL = "https://dycanquxbnecrritcoou.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5Y2FucXV4Ym5lY3JyaXRjb291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMjc1MzEsImV4cCI6MjA5MDYwMzUzMX0.i85iLktslLTHZAF3V0xn8_5FKLwqUXqQP6eAai9rSyk";
     
-    let supabase = null;
-    const urlParams = new URLSearchParams(window.location.search);
-    const tripId = urlParams.get("trip_id");
-    console.log("Trip ID:", tripId);
+    // Initialize Supabase correctly using window.supabase.createClient
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Check for ID immediately
-    if (!tripId) {
-      document.getElementById('permScreen').classList.add('hidden');
-      document.getElementById('errorScreen').classList.remove('hidden');
-    }
+    const params = new URLSearchParams(window.location.search);
+    const tripId = params.get("trip_id");
+    console.log("Trip ID:", tripId);
 
     let map = null, marker = null;
 
-    // Initialize Supabase immediately (since the script tag is synchronous)
-    try {
-      if (window.supabase) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      } else {
-        console.error('Supabase library failed to load.');
+    function startTracking() {
+      if (!tripId) {
+        alert("Trip ID missing from URL");
+        return;
       }
-    } catch(e) {
-      console.error('Supabase setup error: ' + e.message);
-    }
 
-    // --- 2. START TRACKING LOGIC ---
-    function handleStart() {
-      try {
-        if (!supabase) {
-          alert("Database connection is not ready yet. Please wait a moment and try again.");
-          return;
-        }
+      if (!navigator.geolocation) {
+        alert("Geolocation not supported by this browser");
+        return;
+      }
 
-        const btn = document.getElementById('startBtn');
-        const btnText = document.getElementById('btnText');
-        
-        btnText.innerText = "Requesting Signal...";
-        btn.style.opacity = "0.7";
-        btn.disabled = true;
+      // Show map screen immediately after clicking
+      document.getElementById('permScreen').classList.add('hidden');
+      document.getElementById('mapScreen').classList.remove('hidden');
 
-        if (!navigator.geolocation) {
-          alert("Geolocation is not supported by your browser.");
-          btnText.innerText = "Start Tracking Session";
-          btn.style.opacity = "1";
-          btn.disabled = false;
-          return;
-        }
+      navigator.geolocation.watchPosition(
+        async (position) => {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
 
-        const geoOptions = { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 };
+          console.log("Sending GPS:", latitude, longitude);
+          
+          // Update UI
+          updateUI(latitude, longitude);
 
-        const onLocationSuccess = async (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-
-          // Switch screen if first time
-          if (document.getElementById('mapScreen').classList.contains('hidden')) {
-            document.getElementById('permScreen').classList.add('hidden');
-            document.getElementById('mapScreen').classList.remove('hidden');
-            initMap(lat, lng);
-          }
-
-          updateLiveUI(lat, lng);
-
-          // UPLOAD TO DB
+          // CORE INSERT LOGIC (Exact match for user's request)
           const { error } = await supabase
             .from("driver_locations")
             .upsert({
               trip_id: tripId,
-              latitude: lat,
-              longitude: lng,
-              updated_at: new Date().toISOString()
+              latitude: latitude,
+              longitude: longitude,
+              updated_at: new Date().toISOString(),
             });
 
           if (error) {
-            console.error("Supabase Error:", error);
-            document.getElementById('syncStatus').innerText = "⚠ Sync Error: " + error.message;
-            document.getElementById('statusPill').classList.remove('active');
+            console.error("Insert failed:", error.message);
+            document.getElementById('syncStatus').innerText = "❌ Sync Error";
           } else {
-            document.getElementById('syncStatus').innerText = "✓ Live Synced to Cloud";
+            console.log("Inserted successfully ✅");
+            document.getElementById('syncStatus').innerText = "✅ Live Synced";
             document.getElementById('syncTime').innerText = new Date().toLocaleTimeString();
-            document.getElementById('statusPill').classList.add('active');
-            document.getElementById('statusLabel').innerText = "Tracking Active";
           }
-        };
-
-        const onLocationError = (err) => {
-          btnText.innerText = "Start Tracking Session";
-          btn.style.opacity = "1";
-          btn.disabled = false;
-          let msg = "GPS Error. ";
-          if (err.code === 1) msg += "Permission Denied. Please allow location access in your browser settings.";
-          else if (err.code === 2) msg += "Position Unavailable. Check your GPS signal.";
-          else if (err.code === 3) msg += "Request timed out. Trying to get a fix failed. Ensure Location Services are turned ON.";
-          alert(msg);
-        };
-
-        // Get initial position quickly to pass the barrier
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            onLocationSuccess(pos);
-            // Then continuously watch
-            navigator.geolocation.watchPosition(onLocationSuccess, onLocationError, geoOptions);
-          },
-          onLocationError,
-          geoOptions
-        );
-
-      } catch (e) {
-        alert("Unexpected error starting tracking: " + e.message);
-      }
+        },
+        (error) => {
+          console.error("GPS Error:", error.message);
+          alert("Location permission denied or GPS signal lost");
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        }
+      );
     }
 
-    // --- 3. UI RENDERING ---
-    function initMap(lat, lng) {
-      map = L.map('map', { zoomControl: false }).setView([lat, lng], 17);
-      
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
-
-      const driverIcon = L.divIcon({
-        className: '',
-        html: `<div class="driver-marker"><div class="marker-inner"><svg viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18.4 10c-.4-1.1-1.4-2-2.4-2H12L9.6 6.5C9.2 6.2 8.6 6 8 6H4c-.6 0-1 .4-1 1v10c0 .6.4 1 1 1h2"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></div></div>`,
-        iconSize: [60, 60],
-        iconAnchor: [30, 30]
-      });
-
-      marker = L.marker([lat, lng], { icon: driverIcon }).addTo(map);
-    }
-
-    function updateLiveUI(lat, lng) {
+    function updateUI(lat, lng) {
       document.getElementById('latVal').innerText = lat.toFixed(6);
       document.getElementById('lngVal').innerText = lng.toFixed(6);
-      
-      if (marker) {
+
+      if (!map) {
+        map = L.map('map', { zoomControl: false }).setView([lat, lng], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        
+        const driverIcon = L.divIcon({
+          className: '',
+          html: `<div class="driver-marker"><div class="marker-inner"><svg viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18.4 10c-.4-1.1-1.4-2-2.4-2H12L9.6 6.5C9.2 6.2 8.6 6 8 6H4c-.6 0-1 .4-1 1v10c0 .6.4 1 1 1h2"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></div></div>`,
+          iconSize: [50, 50],
+          iconAnchor: [25, 25]
+        });
+        marker = L.marker([lat, lng], { icon: driverIcon }).addTo(map);
+      } else {
         marker.setLatLng([lat, lng]);
-        map.panTo([lat, lng], { animate: true, duration: 1.0 });
+        map.panTo([lat, lng]);
       }
-      if (map) map.invalidateSize();
     }
   </script>
 </body>
