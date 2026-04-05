@@ -175,7 +175,7 @@
 
     
     // Defer initialization to avoid undefined errors
-    let supabase = null;
+    let supabaseClient = null;
     let map = null, marker = null;
     let tripId = null;
 
@@ -186,7 +186,7 @@
         return;
       }
       try {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
       } catch (e) {
         showError("Supabase init failed: " + e.message);
       }
@@ -225,7 +225,7 @@
           
           updateUI(latitude, longitude);
 
-          const { error } = await supabase
+          const { error } = await supabaseClient
             .from("driver_locations")
             .upsert({
               trip_id: tripId,
