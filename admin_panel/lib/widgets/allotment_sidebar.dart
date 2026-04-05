@@ -132,11 +132,37 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
       widget.onClosed();
     } catch (e) {
       if (!mounted) return;
+      final errorMessage = e.toString();
+      final isAuthError = errorMessage.contains('401') || errorMessage.toLowerCase().contains('invalid jwt');
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: ${e.toString()}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Error: $errorMessage'),
+              if (isAuthError)
+                const Padding(
+                  padding: EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    'Try logging out and logging in again to refresh your session.',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                ),
+            ],
+          ),
           backgroundColor: Colors.red,
-          duration: const Duration(seconds: 8),
+          duration: const Duration(seconds: 10),
+          action: isAuthError 
+            ? SnackBarAction(
+                label: 'LOGOUT', 
+                textColor: Colors.white,
+                onPressed: () {
+                   Supabase.instance.client.auth.signOut();
+                },
+              ) 
+            : null,
         ),
       );
     } finally {

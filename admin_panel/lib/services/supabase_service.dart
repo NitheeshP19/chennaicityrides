@@ -1,3 +1,4 @@
+import '../config/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseService {
@@ -21,6 +22,9 @@ class SupabaseService {
   }) async {
     final response = await _client.functions.invoke(
       'allot-trip',
+      headers: {
+        'apikey': SupabaseConfig.anonKey,
+      },
       body: {
         'trip_id': tripId,
         'driver_name': driverName,
