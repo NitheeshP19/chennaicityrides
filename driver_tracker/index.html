@@ -154,23 +154,37 @@
     </div>
   </div>
 
-  <!-- Supabase & Leaflet JS -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase JS (UMD Build) -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
+    // Global Error Catcher for Debugging
+    window.onerror = function(msg, url, line) {
+      alert("System Error: " + msg + " at line " + line);
+    };
+
     // 1. CONFIGURATION
     const SUPABASE_URL = "https://dycanquxbnecrritcoou.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5Y2FucXV4Ym5lY3JyaXRjb291Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMjc1MzEsImV4cCI6MjA5MDYwMzUzMX0.i85iLktslLTHZAF3V0xn8_5FKLwqUXqQP6eAai9rSyk";
     
-    // Initialize Supabase correctly using window.supabase.createClient
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    const params = new URLSearchParams(window.location.search);
-    const tripId = params.get("trip_id");
-    console.log("Trip ID:", tripId);
-
+    // Defer initialization to avoid undefined errors
+    let supabase = null;
     let map = null, marker = null;
+    let tripId = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Check if Supabase successfully loaded from unpkg
+      if (!window.supabase) {
+        alert("Critical failure: The Supabase library failed to load from the internet. Please check your connection.");
+        return;
+      }
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      const params = new URLSearchParams(window.location.search);
+      tripId = params.get("trip_id");
+      console.log("Trip ID:", tripId);
+    });
 
     function startTracking() {
       if (!tripId) {
