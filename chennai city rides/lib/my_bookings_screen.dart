@@ -13,8 +13,7 @@ import 'tracking_screen.dart';
 class _C {
   static const primary = Color(0xFF004C22);
   static const primaryContainer = Color(0xFF166534);
-  static const secondary = Color(0xFFF97316);
-  static const secondaryContainer = Color(0xFFFD761A);
+  static const secondary = Color(0xFF15803D);
   static const surface = Color(0xFFF8F9FA);
   static const surfaceLow = Color(0xFFF3F4F5);
   static const surfaceWhite = Color(0xFFFFFFFF);
@@ -78,16 +77,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
 
       _setupNotifications();
 
-      // ── 🔥 REALTIME VERIFICATION (debug — remove in production) ──
-      _client
-          .from('trip_requests')
-          .stream(primaryKey: ['id'])
-          .listen((data) {
-        debugPrint('🔥 REALTIME WORKING: ${data.length} rows received');
-        for (final row in data) {
-          debugPrint('   ➤ id=${row['id']} status=${row['status']} driver=${row['driver_name']} price=${row['price']}');
-        }
-      });
+      _setupNotifications();
     } else {
       // Fallback: empty stream if somehow not logged in
       _tripsStream = const Stream.empty();
@@ -611,7 +601,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
             _actionBtn(
               onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => TrackingScreen(tripId: tripId))),
-              gradient: [_C.secondaryContainer, _C.secondary],
+              gradient: [_C.primaryContainer, _C.primary],
               icon: Icons.location_on_rounded,
               label: 'Track Live',
             ),

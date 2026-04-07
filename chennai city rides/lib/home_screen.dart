@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'car_selection_screen.dart';
 import 'live_tracking_tab.dart';
 import 'my_bookings_screen.dart';
+import 'account_screen.dart';
 
 class AppColors {
   static const Color primary = Color(0xFF004C22);
   static const Color primaryContainer = Color(0xFF166534);
-  static const Color secondary = Color(0xFF9D4300);
-  static const Color secondaryContainer = Color(0xFFFD761A);
   static const Color surface = Color(0xFFF8F9FA);
   static const Color surfaceContainerLowest = Color(0xFFFFFFFF);
   static const Color onSurface = Color(0xFF191C1D);
@@ -36,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       CarSelectionScreen(),
       LiveTrackingTab(),
       MyBookingsScreen(),
+      AccountScreen(),
     ];
     _navAnimController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -104,6 +104,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 activeIcon: Icons.receipt_long_rounded,
                 label: 'Bookings',
               ),
+              _buildNavItem(
+                index: 3,
+                icon: Icons.person_outline_rounded,
+                activeIcon: Icons.person_rounded,
+                label: 'Account',
+              ),
             ],
           ),
         ),
@@ -126,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 20 : 16,
+          horizontal: isSelected ? 18 : 14,
           vertical: 10,
         ),
         decoration: BoxDecoration(
@@ -154,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               duration: const Duration(milliseconds: 250),
               style: TextStyle(
                 fontFamily: 'Plus Jakarta Sans',
-                fontSize: isSelected ? 11.5 : 11,
+                fontSize: isSelected ? 11 : 10.5,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: isSelected
                     ? AppColors.primaryContainer

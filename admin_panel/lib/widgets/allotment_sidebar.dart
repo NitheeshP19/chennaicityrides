@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/theme.dart';
 import '../screens/tracking_view.dart';
@@ -92,7 +93,7 @@ class _AllotmentSidebarState extends State<AllotmentSidebar> {
 
   String get _trackerLink {
     final tripId = widget.tripData['id'].toString();
-    return "https://nitheeshp19.github.io/chennaicityrides/driver_tracker/?trip_id=$tripId";
+    return "https://nitheeshp19.github.io/chennaicityridesdrivertracker/?trip_id=$tripId";
   }
 
   Future<void> _allotVehicle() async {

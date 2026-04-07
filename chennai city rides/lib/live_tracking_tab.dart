@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class _Colors {
   static const primary = Color(0xFF004C22);
   static const primaryContainer = Color(0xFF166534);
-  static const secondary = Color(0xFFF97316);
+  static const secondary = Color(0xFF15803D);
   static const surface = Color(0xFFF8F9FA);
   static const surfaceContainerLowest = Color(0xFFFFFFFF);
   static const onSurface = Color(0xFF191C1D);

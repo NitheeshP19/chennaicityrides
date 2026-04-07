@@ -330,14 +330,19 @@ class _LoginScreenState extends State<LoginScreen>
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: _isTermsAccepted 
-              ? const Color(0xFFF97316) 
-              : const Color(0xFFF97316).withValues(alpha: 0.4),
+          gradient: _isTermsAccepted
+              ? const LinearGradient(
+                  colors: [_Colors.primaryContainer, _Colors.primary],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                )
+              : null,
+          color: _isTermsAccepted ? null : _Colors.primaryContainer.withValues(alpha: 0.35),
           borderRadius: BorderRadius.circular(9999),
           boxShadow: _isTermsAccepted 
               ? [
                   BoxShadow(
-                    color: const Color(0xFFF97316).withValues(alpha: 0.3),
+                    color: _Colors.primaryContainer.withValues(alpha: 0.35),
                     blurRadius: 24,
                     offset: const Offset(0, 10),
                   ),

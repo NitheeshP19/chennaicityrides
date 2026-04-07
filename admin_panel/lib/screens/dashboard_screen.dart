@@ -115,22 +115,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 }
 
                 final rawTrips = snapshot.data ?? [];
-                
+
                 // 1. Filter by Status & Search
                 final searchText = _searchController.text.toLowerCase();
                 final trips = rawTrips.where((trip) {
-                  final statusMatch = _selectedStatus == 'all' || 
-                                     trip['status'] == _selectedStatus;
-                  
-                  final customerName = trip['customer_name']?.toString().toLowerCase() ?? '';
-                  final pickup = trip['pickup_location']?.toString().toLowerCase() ?? '';
-                  final dropoff = trip['dropoff_location']?.toString().toLowerCase() ?? '';
-                  
-                  final searchMatch = searchText.isEmpty || 
-                                     customerName.contains(searchText) || 
-                                     pickup.contains(searchText) || 
-                                     dropoff.contains(searchText);
-                                     
+                  final statusMatch =
+                      _selectedStatus == 'all' ||
+                      trip['status'] == _selectedStatus;
+
+                  final customerName =
+                      trip['customer_name']?.toString().toLowerCase() ?? '';
+                  final pickup =
+                      trip['pickup_location']?.toString().toLowerCase() ?? '';
+                  final dropoff =
+                      trip['dropoff_location']?.toString().toLowerCase() ?? '';
+
+                  final searchMatch =
+                      searchText.isEmpty ||
+                      customerName.contains(searchText) ||
+                      pickup.contains(searchText) ||
+                      dropoff.contains(searchText);
+
                   return statusMatch && searchMatch;
                 }).toList();
 
@@ -142,14 +147,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     _buildFilterRow(),
                     Expanded(
-                      child: trips.isEmpty 
-                        ? _buildEmptyState()
-                        : ListView.separated(
-                            padding: const EdgeInsets.all(24),
-                            itemCount: trips.length,
-                            separatorBuilder: (_, _) => const SizedBox(height: 12),
-                            itemBuilder: (context, index) => _buildTripCard(trips[index]),
-                          ),
+                      child: trips.isEmpty
+                          ? _buildEmptyState()
+                          : ListView.separated(
+                              padding: const EdgeInsets.all(24),
+                              itemCount: trips.length,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(height: 12),
+                              itemBuilder: (context, index) =>
+                                  _buildTripCard(trips[index]),
+                            ),
                     ),
                   ],
                 );
@@ -204,14 +211,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onSelected: (val) {
               if (val) setState(() => _selectedStatus = filter['id']!);
             },
-            selectedColor: EmeraldOrbitTheme.primaryGreen.withValues(alpha: 0.15),
+            selectedColor: EmeraldOrbitTheme.primaryGreen.withValues(
+              alpha: 0.15,
+            ),
             labelStyle: TextStyle(
-              color: isSelected ? EmeraldOrbitTheme.primaryGreen : Colors.grey.shade600,
+              color: isSelected
+                  ? EmeraldOrbitTheme.primaryGreen
+                  : Colors.grey.shade600,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
             backgroundColor: Colors.white,
             side: BorderSide(
-              color: isSelected ? EmeraldOrbitTheme.primaryGreen : Colors.grey.shade300,
+              color: isSelected
+                  ? EmeraldOrbitTheme.primaryGreen
+                  : Colors.grey.shade300,
             ),
           );
         },
@@ -228,7 +241,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 16),
           Text(
             'No matching records found.',
-            style: TextStyle(color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -239,7 +255,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isSelected = trip['id'] == _selectedTrip?['id'];
     final statusValue = _displayValue(trip['status'], 'pending');
     final isAllotted = statusValue != 'pending';
-    final statusLabel = statusValue.replaceAll('_', ' ').split(' ').map((word) => word.isEmpty ? "" : "${word[0].toUpperCase()}${word.substring(1)}").join(' ');
+    final statusLabel = statusValue
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map(
+          (word) => word.isEmpty
+              ? ""
+              : "${word[0].toUpperCase()}${word.substring(1)}",
+        )
+        .join(' ');
     final pickup = _displayValue(trip['pickup_location'], 'Pickup pending');
     final dropoff = _displayValue(trip['dropoff_location'], 'Dropoff pending');
     final startDate = _displayValue(trip['start_date'], 'Schedule pending');
@@ -254,9 +278,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : EmeraldOrbitTheme.surfaceWhite.withValues(alpha: 0.8),
+          color: isSelected
+              ? Colors.white
+              : EmeraldOrbitTheme.surfaceWhite.withValues(alpha: 0.8),
           border: Border.all(
-            color: isSelected ? EmeraldOrbitTheme.primaryGreen : Colors.transparent,
+            color: isSelected
+                ? EmeraldOrbitTheme.primaryGreen
+                : Colors.transparent,
             width: 2,
           ),
           borderRadius: BorderRadius.circular(16),
@@ -279,22 +307,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: EmeraldOrbitTheme.primaryGreen.withValues(alpha: 0.05),
+                          color: EmeraldOrbitTheme.primaryGreen.withValues(
+                            alpha: 0.05,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(Icons.directions_car_filled_rounded, size: 20, color: EmeraldOrbitTheme.primaryGreen),
+                        child: const Icon(
+                          Icons.directions_car_filled_rounded,
+                          size: 20,
+                          color: EmeraldOrbitTheme.primaryGreen,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           vehicleType,
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                       Text(
                         statusLabel,
                         style: TextStyle(
-                          color: isAllotted ? EmeraldOrbitTheme.primaryGreen : EmeraldOrbitTheme.premiumOrange,
+                          color: isAllotted
+                              ? EmeraldOrbitTheme.primaryGreen
+                              : EmeraldOrbitTheme.premiumOrange,
                           fontWeight: FontWeight.w800,
                           fontSize: 12,
                           letterSpacing: 0.5,
@@ -305,12 +344,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const Divider(height: 32),
                   Row(
                     children: [
-                      const Icon(Icons.circle, size: 8, color: EmeraldOrbitTheme.primaryGreen),
+                      const Icon(
+                        Icons.circle,
+                        size: 8,
+                        color: EmeraldOrbitTheme.primaryGreen,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           pickup,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -319,16 +365,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const Padding(
                     padding: EdgeInsets.only(left: 3, top: 4, bottom: 4),
-                    child: SizedBox(height: 12, child: VerticalDivider(width: 2, thickness: 1.5)),
+                    child: SizedBox(
+                      height: 12,
+                      child: VerticalDivider(width: 2, thickness: 1.5),
+                    ),
                   ),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 12, color: EmeraldOrbitTheme.premiumOrange),
+                      const Icon(
+                        Icons.location_on,
+                        size: 12,
+                        color: EmeraldOrbitTheme.premiumOrange,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           dropoff,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -338,17 +394,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Icon(Icons.person_outline, size: 14, color: Colors.grey.shade600),
+                      Icon(
+                        Icons.person_outline,
+                        size: 14,
+                        color: Colors.grey.shade600,
+                      ),
                       const SizedBox(width: 4),
-                      Text(customerName, style: TextStyle(fontSize: 12, color: Colors.grey.shade700, fontWeight: FontWeight.bold)),
+                      Text(
+                        customerName,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(width: 16),
-                      Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey.shade600),
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
+                        color: Colors.grey.shade600,
+                      ),
                       const SizedBox(width: 4),
-                      Text(startDate, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                      Text(
+                        startDate,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
                       const SizedBox(width: 16),
-                      Icon(Icons.group_outlined, size: 14, color: Colors.grey.shade600),
+                      Icon(
+                        Icons.group_outlined,
+                        size: 14,
+                        color: Colors.grey.shade600,
+                      ),
                       const SizedBox(width: 4),
-                      Text(passengerCount, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                      Text(
+                        passengerCount,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
                     ],
                   ),
                 ],

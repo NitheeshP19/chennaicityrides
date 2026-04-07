@@ -4,8 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AppColors {
   static const Color primary = Color(0xFF004C22);
   static const Color primaryContainer = Color(0xFF166534);
-  static const Color secondary = Color(0xFF9D4300);
-  static const Color secondaryContainer = Color(0xFFFD761A);
+  static const Color primaryLight = Color(0xFF22C55E);
   static const Color surface = Color(0xFFF8F9FA);
   static const Color surfaceContainerLow = Color(0xFFF3F4F5);
   static const Color surfaceContainerLowest = Color(0xFFFFFFFF);
@@ -14,8 +13,10 @@ class AppColors {
   static const Color onSurfaceVariant = Color(0xFF404940);
   static const Color outlineVariant = Color(0xFFBFC9BD);
   static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color onSecondary = Color(0xFFFFFFFF);
   static const Color primaryFixed = Color(0xFFA6F4B5);
+  static const Color secondary = Color(0xFF9D4300);
+  static const Color secondaryContainer = Color(0xFFFD761A);
+  static const Color onSecondary = Color(0xFFFFFFFF);
 }
 
 class VehicleOption {
@@ -147,17 +148,6 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
     super.dispose();
   }
 
-  Future<void> _signOut() async {
-    try {
-      await Supabase.instance.client.auth.signOut();
-    } on AuthException catch (error) {
-      if (!mounted) return;
-      _showSnackBar(error.message, isError: true);
-    } catch (_) {
-      if (!mounted) return;
-      _showSnackBar('Could not sign out right now.', isError: true);
-    }
-  }
 
   String get _userInitial {
     final user = Supabase.instance.client.auth.currentUser;
@@ -492,27 +482,7 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.onSurface.withValues(alpha: 0.06),
-                      blurRadius: 32,
-                      offset: const Offset(0, 12),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  onPressed: _signOut,
-                  tooltip: 'Sign out',
-                  icon: const Icon(Icons.logout_rounded, size: 20),
-                  color: AppColors.onSurface,
-                ),
-              ),
+              const SizedBox(width: 44),
               Row(
                 children: [
                   Container(
@@ -1046,7 +1016,7 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
                 borderRadius: BorderRadius.circular(9999),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.secondary.withValues(alpha: 0.3),
+                    color: AppColors.secondary.withValues(alpha: 0.35),
                     blurRadius: 24,
                     offset: const Offset(0, 10),
                   ),
@@ -1085,7 +1055,7 @@ class _CarSelectionScreenState extends State<CarSelectionScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
+                const Icon(
                   Icons.check_circle_outline_rounded,
                   size: 18,
                   color: AppColors.primaryContainer,
@@ -1272,7 +1242,7 @@ class _ContactBottomSheetState extends State<_ContactBottomSheet> {
                   boxShadow: _canSubmit
                       ? [
                           BoxShadow(
-                            color: AppColors.secondary.withValues(alpha: 0.25),
+                            color: AppColors.secondary.withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),

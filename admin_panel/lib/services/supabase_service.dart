@@ -1,4 +1,3 @@
-import '../config/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseService {
@@ -12,7 +11,7 @@ class SupabaseService {
         .order('created_at', ascending: false);
   }
 
-  // Allot a vehicle and driver to a trip
+  // Allot a vehicle and driver to a trip — Direct DB update (no Edge Function)
   Future<void> allotTrip({
     required String tripId,
     required String driverName,
@@ -20,23 +19,16 @@ class SupabaseService {
     required String vehicleType,
     required double price,
   }) async {
-    final response = await _client.functions.invoke(
-      'allot-trip',
-      headers: {
-        'apikey': SupabaseConfig.anonKey,
-      },
-      body: {
-        'trip_id': tripId,
-        'driver_name': driverName,
-        'driver_phone': driverPhone,
-        'vehicle_type': vehicleType,
-        'price': price,
-      },
-    );
-
-    if (response.status != 200) {
-      throw Exception('Failed to allot trip: ${response.data}');
-    }
+    await _client
+        .from('trip_requests')
+        .update({
+          'driver_name': driverName,
+          'driver_phone': driverPhone,
+          'vehicle_type': vehicleType,
+          'price': price,
+          'status': 'pending_payment',
+        })
+        .eq('id', tripId);
   }
 
   // Stream driver locations for a specific trip

@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 class EmeraldOrbitTheme {
   static const primaryGreen = Color(0xFF166534);
-  static const premiumOrange = Color(0xFFF97316);
+  static const premiumOrange = Color(0xFF22C55E);
   static const surfaceWhite = Color(0xFFFFFFFF);
   static const surfaceGray = Color(0xFFF3F4F6);
   static const textPrimary = Color(0xFF1F2937);
