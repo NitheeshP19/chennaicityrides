@@ -45287,7 +45287,7 @@ else q.r="4+1  Car AC"},
 ow(a,b){var s=a==null?null:B.c.jJ(J.bD(a))
 if(s==null||s.length===0||s==="null")return b
 return s},
-gVw(){return"https://nitheeshp19.github.io/chennaicityrides/driver_tracker/?trip_id="+J.bD(this.a.c.h(0,"id"))},
+gVw(){return"https://nitheeshp19.github.io/chennaicityridesdrivertracker/?trip_id="+J.bD(this.a.c.h(0,"id"))},
 y3(){var s=0,r=A.C(t.H),q,p=2,o=[],n=[],m=this,l,k,j,i,h,g,f,e,d,c
 var $async$y3=A.D(function(a,b){if(a===1){o.push(b)
 s=p}for(;;)switch(s){case 0:d=m.d
